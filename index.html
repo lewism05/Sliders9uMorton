@@ -2409,6 +2409,78 @@ table tbody tr:hover td:first-child {
 }
 .toggle-btn:hover:not(.active) { color: var(--ink); background: rgba(255,255,255,0.5); }
 
+/* ========== STAT WINDOW TOGGLE BAR ========== */
+.window-toggle-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 18px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,247,235,0.55));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--line-glass);
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft);
+}
+.window-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.window-toggle-icon { font-size: 14px; }
+.window-toggle-group {
+  display: inline-flex;
+  background: rgba(0,0,0,0.05);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+.window-toggle-btn {
+  padding: 7px 14px;
+  background: none;
+  border: none;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 1.2px;
+  font-weight: 700;
+  color: var(--ink-mute);
+  cursor: pointer;
+  border-radius: 999px;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+}
+.window-toggle-btn.active {
+  background: var(--orange-grad);
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.2) inset, 0 2px 8px -2px rgba(255,107,26,0.45);
+}
+.window-toggle-btn:hover:not(.active) { color: var(--ink); }
+.window-toggle-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+@media (max-width: 600px) {
+  .window-toggle-bar {
+    flex-direction: column;
+    border-radius: 14px;
+    padding: 12px;
+    align-items: stretch;
+  }
+  .window-toggle-label { justify-content: center; }
+  .window-toggle-group { width: 100%; justify-content: stretch; }
+  .window-toggle-btn { flex: 1; padding: 9px 6px; font-size: 10px; letter-spacing: 0.8px; }
+}
+
 /* ========== DRAWER ========== */
 .drawer-backdrop {
   position: fixed; inset: 0;
@@ -3307,6 +3379,19 @@ table tbody tr:hover td:first-child {
       <div class="stat-label">Top Arm</div>
       <div class="stat-value text-value" id="stat-topArm">—</div>
       <div class="stat-trend up" id="stat-topArmTrend">—</div>
+    </div>
+  </section>
+
+  <!-- ============ STAT WINDOW TOGGLE ============ -->
+  <section class="window-toggle-bar">
+    <div class="window-toggle-label">
+      <span class="window-toggle-icon">📊</span>
+      <span>Showing stats for:</span>
+    </div>
+    <div class="window-toggle-group" id="windowToggleGroup">
+      <button class="window-toggle-btn active" data-window="season">Full Season</button>
+      <button class="window-toggle-btn" data-window="last_8">Last 8</button>
+      <button class="window-toggle-btn" data-window="last_4">Last 4</button>
     </div>
   </section>
 
@@ -5243,7 +5328,20 @@ function extractFieldingStats(row, headers) {
 /* ============================================================
    BUILD PLAYERS ARRAY FROM CSV_DATA
    ============================================================ */
-function buildPlayers() {
+/* The "active view window" determines which window's data populates the
+   primary stat fields (p.bat.ops, p.pit.era, etc.) on each player object.
+   When the user toggles to "Last 4", every renderer that reads p.bat.ops
+   automatically gets the L4 value — no per-renderer changes needed.
+   The opsL4/opsL8 fields remain fixed reference points for trend cards. */
+const VIEW_WINDOW_KEY = 'sliders_view_window_v1';
+let activeViewWindow = 'season';
+try {
+  const saved = localStorage.getItem(VIEW_WINDOW_KEY);
+  if (saved && ['season','last_8','last_4'].includes(saved)) activeViewWindow = saved;
+} catch {}
+
+function buildPlayers(viewWindow) {
+  const win = viewWindow || activeViewWindow || 'season';
   const playerMap = new Map();
 
   function collect(category, windowKey) {
@@ -5284,7 +5382,7 @@ function buildPlayers() {
   const players = [];
 
   playerMap.forEach((player, name) => {
-    // Batting — prefer season, fall back to longest window present
+    // Always extract season + L4 + L8 (so trend references stay fixed)
     const bAny = findRowAnyWindow('batting', name, 'season');
     const bL8 = findRow('batting', 'last_8', name);
     const bL4 = findRow('batting', 'last_4', name);
@@ -5295,34 +5393,51 @@ function buildPlayers() {
 
     // Pitching
     const pAny = findRowAnyWindow('pitching', name, 'season');
+    const pL8 = findRow('pitching', 'last_8', name);
     const pL4 = findRow('pitching', 'last_4', name);
     const pitSeason = pAny ? extractPitchingStats(pAny.row, pAny.headers) : null;
+    const pitL8 = pL8 ? extractPitchingStats(pL8, CSV_DATA.pitching.last_8.headers) : null;
     const pitL4 = pL4 ? extractPitchingStats(pL4, CSV_DATA.pitching.last_4.headers) : null;
 
-    // Fielding
+    // Fielding (no per-window split — fielding cumulative)
     const fAny = findRowAnyWindow('fielding', name, 'season');
 
     // Skip player only if NOTHING was found in any category
     if (!batSeason && !pitSeason && !fAny) return;
 
+    // Determine which extracted bat/pit object becomes the "primary" based
+    // on the active view window. Fall back gracefully if the chosen window
+    // has no row for this player.
+    const primaryBat = (win === 'last_4' && batL4) ? batL4
+                     : (win === 'last_8' && batL8) ? batL8
+                     : batSeason;
+    const primaryPit = (win === 'last_4' && pitL4) ? pitL4
+                     : (win === 'last_8' && pitL8) ? pitL8
+                     : pitSeason;
+
     player.bat = {
-      avg: batSeason?.avg ?? 0,
-      obp: batSeason?.obp ?? 0,
-      slg: batSeason?.slg ?? 0,
-      ops: batSeason?.ops ?? 0,
+      avg: primaryBat?.avg ?? 0,
+      obp: primaryBat?.obp ?? 0,
+      slg: primaryBat?.slg ?? 0,
+      ops: primaryBat?.ops ?? 0,
+      // Reference fields are FIXED — always the season/L4/L8 values regardless
+      // of toggle, so trend cards remain comparable across views.
+      opsSeason: batSeason?.ops ?? 0,
       opsL8: batL8?.ops ?? batSeason?.ops ?? 0,
       opsL4: batL4?.ops ?? batSeason?.ops ?? 0,
-      k: Math.round(batSeason?.k ?? 0)
+      k: Math.round(primaryBat?.k ?? 0)
     };
 
-    if (pitSeason && pitSeason.ip > 0) {
+    if (primaryPit && primaryPit.ip > 0) {
       player.pit = {
-        ip: pitSeason.ip,
-        era: pitSeason.era,
-        bbip: pitSeason.bbip,
-        kip: pitSeason.kip,
-        strike: pitSeason.strike,
-        eraL4: pitL4?.era ?? pitSeason.era
+        ip: primaryPit.ip,
+        era: primaryPit.era,
+        bbip: primaryPit.bbip,
+        kip: primaryPit.kip,
+        strike: primaryPit.strike,
+        // Reference fields stay fixed
+        eraSeason: pitSeason?.era ?? primaryPit.era,
+        eraL4: pitL4?.era ?? primaryPit.era
       };
     }
 
@@ -8393,8 +8508,63 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+/* ============================================================
+   STAT WINDOW TOGGLE
+   Switches the dashboard's primary stat lens: Season / Last 8 / Last 4.
+   Disables buttons for windows that have no uploaded CSV. Persists
+   the choice per-device.
+   ============================================================ */
+function setActiveViewWindow(win, opts = {}) {
+  if (!['season','last_8','last_4'].includes(win)) win = 'season';
+  activeViewWindow = win;
+  try { localStorage.setItem(VIEW_WINDOW_KEY, win); } catch {}
+
+  // Update button states
+  document.querySelectorAll('.window-toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.window === win);
+  });
+
+  // Re-render everything against the new window
+  if (!opts.skipRender) renderAll();
+}
+
+function refreshWindowToggleAvailability() {
+  // Disable buttons whose window has no batting/pitching CSV uploaded
+  const hasWindow = (w) => {
+    if (w === 'season') return !!(CSV_DATA.batting?.season || CSV_DATA.pitching?.season);
+    return !!(CSV_DATA.batting?.[w] || CSV_DATA.pitching?.[w]);
+  };
+  document.querySelectorAll('.window-toggle-btn').forEach(btn => {
+    const w = btn.dataset.window;
+    const available = hasWindow(w);
+    btn.classList.toggle('disabled', !available);
+    btn.title = available ? '' : `No data uploaded for this window`;
+  });
+  // If the saved choice has no data, fall back to season silently
+  if (!hasWindow(activeViewWindow)) {
+    setActiveViewWindow('season', { skipRender: true });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.window-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('disabled')) return;
+      setActiveViewWindow(btn.dataset.window);
+    });
+  });
+  // Reflect saved choice on initial load
+  document.querySelectorAll('.window-toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.window === activeViewWindow);
+  });
+});
+
+
 function renderAll() {
   PLAYERS = buildPlayers();
+
+  // Keep window-toggle button availability in sync with what's been uploaded
+  if (typeof refreshWindowToggleAvailability === 'function') refreshWindowToggleAvailability();
 
   if (PLAYERS.length === 0) {
     renderEmpty();
