@@ -2273,6 +2273,193 @@ table tbody tr:hover td:first-child {
   text-transform: uppercase;
 }
 .drawer-section p { font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
+
+/* ========== IMPROVEMENT PLAN (drawer) ========== */
+.improve-issue {
+  background: linear-gradient(135deg, rgba(255,107,26,0.08), rgba(255,107,26,0.02));
+  border: 1px solid rgba(255,107,26,0.18);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.improve-issue-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--orange-deep);
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+.improve-issue-why {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.improve-good {
+  background: linear-gradient(135deg, rgba(22,163,74,0.06), rgba(22,163,74,0.01));
+  border: 1px solid rgba(22,163,74,0.18);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 600;
+  line-height: 1.5;
+}
+.drill-card {
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--line-glass);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-soft);
+}
+.drill-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+.drill-cue {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--orange-deep);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.drill-meta {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 8px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+.drill-steps {
+  margin: 0;
+  padding-left: 18px;
+}
+.drill-steps li {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+}
+.drill-steps li:last-child { margin-bottom: 0; }
+.drill-audience {
+  display: inline-block;
+  font-family: 'Geist Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: 2px;
+}
+.drill-audience.parent { background: rgba(100,150,255,0.18); color: #2a6dd9; }
+.drill-audience.coach  { background: rgba(255,107,26,0.18); color: var(--orange-deep); }
+.drill-audience.player { background: rgba(22,163,74,0.18); color: var(--green); }
+
+/* ========== PRACTICE FOCUS CARD (Overview tab) ========== */
+.practice-focus-card {
+  background: var(--paper);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--line-glass);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow-glass);
+  position: relative;
+  overflow: hidden;
+  margin-top: 20px;
+}
+.practice-focus-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 16px; right: 16px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent);
+}
+.pf-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pf-head h2 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.7px;
+  color: var(--ink);
+}
+.pf-head h2 em { font-style: normal; background: var(--orange-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pf-head .pf-sub {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 1.5px;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.pf-focus-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.pf-focus-row:last-child { border-bottom: none; padding-bottom: 4px; }
+.pf-focus-row:first-of-type { padding-top: 4px; }
+.pf-priority {
+  font-family: 'Geist Mono', monospace;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.pf-priority.p3 { background: rgba(220,38,38,0.15); color: #b91c1c; }
+.pf-priority.p2 { background: rgba(255,107,26,0.18); color: var(--orange-deep); }
+.pf-priority.p1 { background: rgba(100,150,255,0.18); color: #2a6dd9; }
+.pf-focus-text { min-width: 0; }
+.pf-focus-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--ink);
+  margin-bottom: 2px;
+  letter-spacing: -0.2px;
+}
+.pf-focus-why {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.pf-focus-drill {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--orange-deep);
+  font-weight: 700;
+  text-transform: uppercase;
+}
 .coach-note {
   background: var(--orange-soft);
   border-left: 3px solid var(--orange);
@@ -2518,6 +2705,9 @@ table tbody tr:hover td:first-child {
     <div class="card">
       <div class="chart-box tall"><canvas id="teamTrendChart"></canvas></div>
     </div>
+
+    <!-- Practice Focus — auto-generated coaching priorities -->
+    <div class="practice-focus-card" id="practiceFocusCard"></div>
 
   </section>
 
@@ -2806,6 +2996,10 @@ table tbody tr:hover td:first-child {
     <h3 id="drawer-trend-title">Trend (OPS by window)</h3>
     <div class="chart-box" style="height: 180px;"><canvas id="drawerChart"></canvas></div>
   </div>
+  <div class="drawer-section" id="drawer-improvement">
+    <h3 id="drawer-improvement-title">Improvement Plan</h3>
+    <div id="drawer-improvement-body"></div>
+  </div>
   <div class="drawer-section">
     <h3>Coach's Note</h3>
     <div class="coach-note" id="drawer-note"></div>
@@ -2827,6 +3021,531 @@ table tbody tr:hover td:first-child {
 </div>
 
 <script>
+/* ============================================================
+   DRILL LIBRARY — researched, 9U-appropriate
+   ------------------------------------------------------------
+   Indexed by weakness key. Each drill is one short card with a
+   cue, steps, and an estimated time. Sources noted in comments.
+   Pulled from: USA Baseball / Little League University, MOJO Sports,
+   The Hitting Vault, Driveline Baseball, BRUCE BOLT, GoRout,
+   Veo, ABCA Coaches' Corner, Bruce Bolt, Coaching-Youth-Baseball.
+   ============================================================ */
+const DRILLS = {
+  // ---------- BATTING ----------
+  high_k_rate: [
+    {
+      title: 'Two-Strike Approach',
+      cue: 'Choke up · Crowd the plate · Shorten the swing',
+      steps: [
+        'With two strikes, choke up 1–2 inches on the bat.',
+        'Move 2–3 inches closer to the plate to cover the outside corner.',
+        'Spread the stance an inch wider for balance and shorten the stride.',
+        'New goal: foul off close pitches, put any strike in play. No swinging at chase pitches.'
+      ],
+      time: '10 min',
+      gear: 'Tee or live BP',
+      audience: 'player'
+    },
+    {
+      title: 'Two-Ball Color Drill',
+      cue: 'Track the ball and decide late',
+      steps: [
+        'Coach holds two different-colored balls (one in each hand).',
+        'Coach soft-tosses BOTH at once and shouts a color in the air.',
+        'Hitter must hit only the called color, ignore the other.',
+        'Forces tracking + late decision. Great fix for chasing.'
+      ],
+      time: '8 min',
+      gear: 'Two colored balls, screen',
+      audience: 'parent'
+    },
+    {
+      title: 'Knob Drill (Hands Inside)',
+      cue: 'Hands inside the ball, no casting',
+      steps: [
+        'Set ball on tee at belt height.',
+        'Hitter takes normal stance but tries to hit the ball with the KNOB of the bat.',
+        'It will feel weird — that is the point. Forces hands tight to the body.',
+        'Builds a short, direct path to the ball. Reduces big looping swings that miss.'
+      ],
+      time: '5 min',
+      gear: 'Tee, bat',
+      audience: 'parent'
+    }
+  ],
+  low_obp: [
+    {
+      title: 'Take-Pitches BP',
+      cue: 'Reward not swinging at balls',
+      steps: [
+        'Pitcher (coach) intentionally throws every 3rd pitch outside the zone.',
+        'Hitter must NOT swing at the bad pitch — taking it earns 1 point.',
+        'Swinging at a ball = -1 point. Swinging at a strike and making contact = 1 point.',
+        'Build the habit of trusting the strike zone. Walks come from this.'
+      ],
+      time: '12 min',
+      gear: 'Live coach pitch, screen',
+      audience: 'coach'
+    },
+    {
+      title: 'Strike Zone Box Game',
+      cue: 'Yes-zone vs No-zone',
+      steps: [
+        'Tape an outline of the strike zone on a fence or net.',
+        'Hitter stands in the box without a bat and just calls "ball" or "strike" as you toss.',
+        'No swing — pure visual training of the zone.',
+        '20 pitches, then add the bat back and only swing at "strike" calls.'
+      ],
+      time: '10 min',
+      gear: 'Tape, screen, balls',
+      audience: 'parent'
+    }
+  ],
+  low_slg: [
+    {
+      title: 'Hammer Time',
+      cue: 'Use the hands to drive through',
+      steps: [
+        'Set ball on tee at belt height.',
+        'Hitter holds a soft mallet/hammer instead of a bat.',
+        'Take a normal swing and "hit" the ball with the hammer head.',
+        'Feels the hand path that creates barrel speed. Power comes from the hands, not the arms.'
+      ],
+      time: '6 min',
+      gear: 'Soft mallet, tee',
+      audience: 'parent'
+    },
+    {
+      title: 'Happy Gilmore Drill',
+      cue: 'Build momentum into the swing',
+      steps: [
+        'Hitter starts with both feet behind the back of the box.',
+        'Step the back foot in to the box, THEN immediately stride and swing.',
+        'The forward momentum builds power from the ground up.',
+        'After a few reps, return to a normal stance. The legs will feel "loaded" automatically.'
+      ],
+      time: '8 min',
+      gear: 'Tee or soft toss',
+      audience: 'parent'
+    }
+  ],
+  cold_streak: [
+    {
+      title: 'Tee Reset',
+      cue: 'Back to fundamentals — line drives only',
+      steps: [
+        'Set tee at belt height, middle of the plate. No fancy locations.',
+        'Goal: 10 line drives in a row up the middle.',
+        'No grounders, no pop-ups. If a swing isn\u2019t a line drive, restart the count.',
+        'Forces the hitter to slow down, see the ball, drive it. Confidence rebuilder.'
+      ],
+      time: '10 min',
+      gear: 'Tee, net',
+      audience: 'parent'
+    }
+  ],
+
+  // ---------- PITCHING ----------
+  high_walks: [
+    {
+      title: 'Bullseye Drill',
+      cue: 'Throw to a target, not just a catcher',
+      steps: [
+        'Catcher squats normally. Tape a 12"x12" square on a fence behind them.',
+        'Pitcher throws 10 pitches aiming for the square — count how many hit it.',
+        'Move the square to different corners (low-in, low-away, high-in, high-away) every 10.',
+        'Builds intent. "Throw a strike" is too vague — give the eyes a specific spot.'
+      ],
+      time: '15 min',
+      gear: 'Tape, catcher, fence',
+      audience: 'coach'
+    },
+    {
+      title: 'Knee Drill (Strike Throwing)',
+      cue: 'Upper body only — pure accuracy',
+      steps: [
+        'Pitcher kneels on their throwing-side knee, glove-side knee up.',
+        'Throw to a partner 30 feet away. Focus on arm path and finish.',
+        'Removes legs from the equation — isolates the release.',
+        '20 throws, must hit chest level on partner. Then back to the mound.'
+      ],
+      time: '10 min',
+      gear: 'Partner, ball',
+      audience: 'parent'
+    },
+    {
+      title: 'First-Pitch Strike Game',
+      cue: 'Most important pitch of every at-bat',
+      steps: [
+        'Live BP scenario. Each "batter" gets exactly one pitch.',
+        'Pitcher\u2019s job: throw a strike. Get a strike → 1 point. Ball → -1.',
+        'Run for 20 batters. Track score across practices.',
+        'Builds the mindset that 0-1 starts every at-bat in the pitcher\u2019s favor.'
+      ],
+      time: '20 min',
+      gear: 'Catcher, screen, batters',
+      audience: 'coach'
+    }
+  ],
+  high_era: [
+    {
+      title: 'Wrist Snap Release',
+      cue: 'Snap down through the ball',
+      steps: [
+        'Stand 25 feet from a partner. Get into the final cocked position (arm up, elbow bent).',
+        'Without striding, just snap the wrist forward — pump the arm 3 times then release on the 3rd.',
+        'Hold the finish position for 3 seconds.',
+        'Builds the release point that turns flat balls into strikes that move down.'
+      ],
+      time: '10 min',
+      gear: 'Partner, ball',
+      audience: 'parent'
+    },
+    {
+      title: 'Quiet Front-Side',
+      cue: 'Glove pulls to the ribs',
+      steps: [
+        'Slow-motion delivery. Focus only on the glove arm.',
+        'As the throwing arm comes forward, the glove pulls in to the chest — not flying open.',
+        'Common cause of high pitches: glove flying out, head pulling off target.',
+        '15 reps slow, then 10 at full speed. Should feel a "stronger finish".'
+      ],
+      time: '10 min',
+      gear: 'None',
+      audience: 'parent'
+    }
+  ],
+  low_strike: [
+    {
+      title: 'Tell Yourself the Target',
+      cue: 'Mental rep before the physical one',
+      steps: [
+        'Before every pitch in the bullpen, the pitcher says out loud: "I am going to hit the target."',
+        'Then steps onto the rubber and throws.',
+        'Sounds silly. It works. Strike rate goes up measurably for kids who do this.',
+        'Coach: don\u2019t skip the verbal cue — that\u2019s the drill.'
+      ],
+      time: '10 min',
+      gear: 'Catcher, glove target',
+      audience: 'coach'
+    }
+  ],
+
+  // ---------- FIELDING ----------
+  high_errors: [
+    {
+      title: 'Knee Catches',
+      cue: 'Glove on the ground, palm to the ball',
+      steps: [
+        'Player kneels on one knee, glove down with fingertips touching the ground.',
+        'Partner rolls grounders directly to the glove from 15 feet.',
+        'Field cleanly without standing up. 15 reps each side.',
+        'Removes footwork — isolates "catching the ball with your eyes".'
+      ],
+      time: '8 min',
+      gear: 'Partner, ball',
+      audience: 'parent'
+    },
+    {
+      title: 'Right-Left-Field',
+      cue: 'Footwork creates soft hands',
+      steps: [
+        'Coach rolls grounder. Fielder takes a right-step then left-step to get low.',
+        'Field with two hands at the bottom of the bounce.',
+        'After the catch: right-left to set up the throw, front shoulder closed to target.',
+        'Drilling the feet automatically fixes most "errors" — they\u2019re really footwork problems.'
+      ],
+      time: '12 min',
+      gear: 'Coach + fungo',
+      audience: 'coach'
+    },
+    {
+      title: 'Short Hop Showdown',
+      cue: 'Catch the in-between bounce',
+      steps: [
+        'Partner stands 12 feet away and bounces ball so it short-hops the fielder.',
+        'Fielder catches with one hand at the bounce — palm up.',
+        'Builds confidence in the trickiest bounce. Most game errors come from short hops.',
+        '20 reps each, then game-speed grounders that bounce.'
+      ],
+      time: '8 min',
+      gear: 'Partner, ball',
+      audience: 'parent'
+    }
+  ],
+  position_C: [
+    {
+      title: 'Block & Recover',
+      cue: 'Knees down, ball stays in front',
+      steps: [
+        'Coach throws balls in the dirt 5 feet in front of the catcher.',
+        'Catcher drops to both knees, glove between legs, body angled to keep ball in front.',
+        'Recover, find the ball, scoop and ready position.',
+        '15 reps. The #1 thing that keeps runners from advancing on a wild pitch.'
+      ],
+      time: '10 min',
+      gear: 'Catcher\u2019s gear, screen, balls',
+      audience: 'coach'
+    }
+  ],
+  position_OF: [
+    {
+      title: 'Drop Step + Track',
+      cue: 'First step is BACK, not in',
+      steps: [
+        'Coach calls "back" and tosses fly ball over outfielder\u2019s head.',
+        'First step is a drop-step (turn hips, push back), NOT a bunt-step in.',
+        'Track the ball over the shoulder, catch on the run.',
+        '10 reps each side. Cuts down on balls over the OF\u2019s head — most common youth XBH.'
+      ],
+      time: '12 min',
+      gear: 'Tennis balls (safer), open space',
+      audience: 'coach'
+    }
+  ],
+
+  // ---------- BASE RUNNING ----------
+  baserunning: [
+    {
+      title: 'Banana Route',
+      cue: 'Round the inside corner, no slow-down',
+      steps: [
+        'Sprint home → first. As you approach 1B, arc out 4–5 steps before the bag.',
+        'Hit the inside corner of 1B with your right foot, push off toward 2B.',
+        'No slowdown, no extra step. Most kids run straight at 1B and lose 0.4 seconds rounding.',
+        '4 reps per kid. Walk it first, then jog, then full speed.'
+      ],
+      time: '10 min',
+      gear: 'Bases',
+      audience: 'coach'
+    },
+    {
+      title: 'Read the Ball',
+      cue: 'Watch the ball, not the fielder',
+      steps: [
+        'Runner on 1B. Coach hits ground ball / line drive / fly ball to random fielders.',
+        'Runner makes a decision: advance on grounder through, hold on liner, tag on deep fly.',
+        'Coach announces correct/incorrect after each rep.',
+        'At 9U, simplify to two rules: ground ball through = run, anything else = hold.'
+      ],
+      time: '15 min',
+      gear: 'Bases, fungo, fielders',
+      audience: 'coach'
+    }
+  ]
+};
+
+
+/* ============================================================
+   ISSUE DETECTION
+   Identify a player's weak spots based on their stats. Returns an
+   array of { key, severity, title, why } objects, ordered most →
+   least severe. Used by the drawer Improvement Plan and by the
+   team Practice Focus card.
+   ============================================================ */
+function detectPlayerIssues(player, view) {
+  const issues = [];
+  if (!player) return issues;
+
+  // ---------- BATTING ----------
+  if (view === 'batting' || view === 'overview' || !view) {
+    const b = player.bat || {};
+    if (b.k != null && b.k > 30 && (b.ops > 0 || b.avg > 0)) {
+      issues.push({
+        key: 'high_k_rate', severity: 3,
+        title: 'High strikeout rate',
+        why: `${Math.round(b.k)}% of at-bats end in a K. Reducing chase swings and shortening the swing in two-strike counts is the unlock.`
+      });
+    } else if (b.k != null && b.k > 22 && b.ops > 0) {
+      issues.push({
+        key: 'high_k_rate', severity: 2,
+        title: 'Elevated strikeout rate',
+        why: `${Math.round(b.k)}% K-rate has room to come down. Two-strike work pays off fastest.`
+      });
+    }
+    if (b.obp != null && b.obp < 0.30 && b.ops > 0) {
+      issues.push({
+        key: 'low_obp', severity: 3,
+        title: 'Low on-base percentage',
+        why: `OBP of ${formatStat(b.obp)} — getting on base is the fastest way to help the team. Plate discipline first, contact second.`
+      });
+    } else if (b.obp != null && b.obp < 0.38 && b.ops > 0) {
+      issues.push({
+        key: 'low_obp', severity: 2,
+        title: 'OBP below team norm',
+        why: `OBP of ${formatStat(b.obp)} is workable but not yet a leadoff-quality on-base.`
+      });
+    }
+    if (b.slg != null && b.slg < 0.30 && b.ops > 0) {
+      issues.push({
+        key: 'low_slg', severity: 2,
+        title: 'Low slugging',
+        why: `SLG of ${formatStat(b.slg)} — driving the ball with more authority will move runners and create extra-base chances.`
+      });
+    }
+    if (b.opsL4 != null && b.ops != null && b.ops > 0 && (b.ops - b.opsL4) > 0.150) {
+      issues.push({
+        key: 'cold_streak', severity: 2,
+        title: 'Cold streak (last 4 games)',
+        why: `L4 OPS is ${formatStat(b.opsL4)} vs season ${formatStat(b.ops)}. Reset on the tee, line drives only.`
+      });
+    }
+  }
+
+  // ---------- PITCHING ----------
+  if (view === 'pitching') {
+    const p = player.pit;
+    if (!p || !(p.ip > 0)) return issues;
+    if (p.bbip != null && p.bbip > 2.5) {
+      issues.push({
+        key: 'high_walks', severity: 3,
+        title: 'High walks per inning',
+        why: `Walking ${formatNum(p.bbip, 2)} per inning. At this age you can\u2019t defend walks — strike-throwing is rep #1.`
+      });
+    } else if (p.bbip != null && p.bbip > 1.5) {
+      issues.push({
+        key: 'high_walks', severity: 2,
+        title: 'Walks limiting innings',
+        why: `${formatNum(p.bbip, 2)} BB/IP. Cutting this in half doubles their effective innings.`
+      });
+    }
+    if (p.era != null && p.era > 4.5 && p.ip > 5) {
+      issues.push({
+        key: 'high_era', severity: 3,
+        title: 'High ERA',
+        why: `${formatNum(p.era, 2)} ERA over ${formatNum(p.ip, 1)} IP. Mechanics + first-pitch strikes will move this number more than velocity work.`
+      });
+    } else if (p.era != null && p.era > 3.0 && p.ip > 5) {
+      issues.push({
+        key: 'high_era', severity: 2,
+        title: 'ERA above tier-1 threshold',
+        why: `${formatNum(p.era, 2)} ERA — refinement of release point and finish helps here.`
+      });
+    }
+    if (p.strike != null && p.strike < 55 && p.ip > 3) {
+      issues.push({
+        key: 'low_strike', severity: 2,
+        title: 'Low strike percentage',
+        why: `${Math.round(p.strike)}% strikes. The "I am going to hit the target" mental rep is the #1 fix at this age.`
+      });
+    }
+  }
+
+  // ---------- FIELDING ----------
+  if (view === 'defense') {
+    const f = player.field || {};
+    if (f.errPct != null && f.errPct > 12 && f.chances > 5) {
+      issues.push({
+        key: 'high_errors', severity: 3,
+        title: 'High error rate',
+        why: `${formatNum(f.errPct, 1)}% errors on ${f.chances} chances. Footwork drills first — most "errors" are really feet problems.`
+      });
+    } else if (f.errPct != null && f.errPct > 7 && f.chances > 5) {
+      issues.push({
+        key: 'high_errors', severity: 2,
+        title: 'Some clean-up needed',
+        why: `${formatNum(f.errPct, 1)}% error rate — soft-hands and short-hop work pays off.`
+      });
+    }
+    if (f.position === 'C') {
+      issues.push({
+        key: 'position_C', severity: 1,
+        title: 'Catcher-specific work',
+        why: 'Blocking pitches in the dirt is the catcher fundamental that wins the most games at this age.'
+      });
+    } else if (f.position === 'LF' || f.position === 'CF' || f.position === 'RF') {
+      issues.push({
+        key: 'position_OF', severity: 1,
+        title: 'Outfield-specific work',
+        why: 'Drop-step and tracking — the difference between routine outs and balls over the head.'
+      });
+    }
+  }
+
+  issues.sort((a, b) => b.severity - a.severity);
+  return issues.slice(0, 3);
+}
+
+function drillsForIssues(issues, perIssue=2) {
+  if (!issues || issues.length === 0) return [];
+  const out = [];
+  issues.forEach(iss => {
+    const drills = DRILLS[iss.key] || [];
+    drills.slice(0, perIssue).forEach(d => out.push({ ...d, _issueTitle: iss.title }));
+  });
+  return out;
+}
+
+// Team-level analysis: aggregate trends across all players to surface
+// what the squad should focus on this week.
+function detectTeamFocus(players) {
+  if (!players || players.length === 0) return [];
+  const focus = [];
+
+  const batters = players.filter(p => p.bat && (p.bat.ops > 0 || p.bat.avg > 0));
+  if (batters.length > 0) {
+    const avgK = batters.reduce((s, p) => s + (p.bat.k || 0), 0) / batters.length;
+    const avgOBP = batters.reduce((s, p) => s + (p.bat.obp || 0), 0) / batters.length;
+    if (avgK > 26) {
+      focus.push({
+        key: 'high_k_rate', severity: avgK > 32 ? 3 : 2,
+        title: 'Team contact (reduce strikeouts)',
+        why: `Team K-rate is ${Math.round(avgK)}%. Two-strike work and tee fundamentals across every batter.`,
+        type: 'batting'
+      });
+    }
+    if (avgOBP < 0.36) {
+      focus.push({
+        key: 'low_obp', severity: avgOBP < 0.32 ? 3 : 2,
+        title: 'Team plate discipline',
+        why: `Team OBP is ${formatStat(avgOBP)}. Work the take-pitches game next practice.`,
+        type: 'batting'
+      });
+    }
+  }
+
+  const pitchers = players.filter(p => p.pit && p.pit.ip > 2);
+  if (pitchers.length > 0) {
+    const totalBB = pitchers.reduce((s, p) => s + (p.pit.bbip || 0) * (p.pit.ip || 0), 0);
+    const totalIP = pitchers.reduce((s, p) => s + (p.pit.ip || 0), 0);
+    const teamBBIP = totalIP > 0 ? totalBB / totalIP : 0;
+    if (teamBBIP > 1.8) {
+      focus.push({
+        key: 'high_walks', severity: teamBBIP > 2.5 ? 3 : 2,
+        title: 'Pitching staff: throw strikes',
+        why: `Staff is walking ${formatNum(teamBBIP, 2)} per inning. First-pitch strike game + bullseye drill all week.`,
+        type: 'pitching'
+      });
+    }
+  }
+
+  const fielders = players.filter(p => p.field && p.field.chances > 3);
+  if (fielders.length > 0) {
+    const avgErr = fielders.reduce((s, p) => s + (p.field.errPct || 0), 0) / fielders.length;
+    if (avgErr > 10) {
+      focus.push({
+        key: 'high_errors', severity: avgErr > 15 ? 3 : 2,
+        title: 'Defensive fundamentals',
+        why: `Team error rate is ${formatNum(avgErr, 1)}%. Right-left-field footwork drill, short-hop reps.`,
+        type: 'fielding'
+      });
+    }
+  }
+
+  if (focus.length < 2) {
+    focus.push({
+      key: 'baserunning', severity: 1,
+      title: 'Base running fundamentals',
+      why: 'Banana routes and "read the ball" — easy wins for a 9U team that compound across the season.',
+      type: 'baserunning'
+    });
+  }
+
+  focus.sort((a, b) => b.severity - a.severity);
+  return focus.slice(0, 4);
+}
+
+
 /* ============================================================
    STORAGE & STATE
    ============================================================ */
@@ -3770,7 +4489,7 @@ function buildPlayers() {
 
   ranked.forEach(p => {
     p.role = generateRole(p);
-    p.note = generateNote(p);
+    p.notes = generateNotes(p);
   });
 
   return ranked;
@@ -3794,24 +4513,81 @@ function generateRole(p) {
   return parts.join(' · ');
 }
 
-function generateNote(p) {
-  const notes = [];
-  const delta = (p.bat.opsL4 || 0) - (p.bat.ops || 0);
+function generateNotes(p) {
+  const batting = [];
+  const pitching = [];
+  const defense = [];
 
-  if (p.tier === 1) notes.push('Core hitter — anchor of the lineup.');
-  else if (p.tier === 2) notes.push('Support bat — keeps innings alive.');
-  else notes.push('Development player — focus on contact and confidence.');
+  // ---------- BATTING ----------
+  const delta = (p.bat?.opsL4 || 0) - (p.bat?.ops || 0);
+  if (p.tier === 1) batting.push('Core hitter — anchor of the lineup.');
+  else if (p.tier === 2) batting.push('Support bat — keeps innings alive.');
+  else batting.push('Development player — focus on contact and confidence.');
 
-  if (delta > 0.1) notes.push(`<strong>Heating up:</strong> +${formatStat(delta)} OPS over the last 4 games. Reward with at-bats.`);
-  else if (delta < -0.1) notes.push(`<strong>Cooling off:</strong> ${formatStat(delta)} OPS recently. Don't overreact if season profile is strong.`);
+  if (delta > 0.1) batting.push(`<strong>Heating up:</strong> +${formatStat(delta)} OPS over the last 4 games. Reward with at-bats.`);
+  else if (delta < -0.1) batting.push(`<strong>Cooling off:</strong> ${formatStat(delta)} OPS recently. Don't overreact if season profile is strong.`);
 
-  if ((p.bat.k ?? 0) > 25) notes.push('High K-rate — work contact drills, shorten the swing.');
-  if ((p.bat.obp ?? 0) > 0.45) notes.push('Elite OBP — table-setter or 2-hole material.');
-  if (p.pit && p.pit.bbip > 2.5) notes.push('<strong>Pitching:</strong> walks limiting innings — develop strike-throwing before tournament reps.');
-  if (p.pit && p.pit.bbip > 0 && p.pit.bbip <= 1.5 && p.pit.era < 3) notes.push('<strong>Pitching:</strong> strike-thrower — trust in close games.');
-  if (p.field && p.field.errPct > 14) notes.push('Defense reliability is a concern — limit to lower-impact positions.');
+  if ((p.bat?.k ?? 0) > 25) batting.push('High K-rate — work contact drills, shorten the swing.');
+  if ((p.bat?.obp ?? 0) > 0.45) batting.push('Elite OBP — table-setter or 2-hole material.');
+  if ((p.bat?.slg ?? 0) > 0.50) batting.push('Above-average power — green light on hitter\u2019s counts.');
 
-  return notes.join(' ');
+  // ---------- PITCHING ----------
+  if (p.pit && p.pit.ip > 0) {
+    if (p.pit.bbip > 2.5) {
+      pitching.push('Walks limiting innings — develop strike-throwing before tournament reps.');
+    } else if (p.pit.bbip > 0 && p.pit.bbip <= 1.5 && p.pit.era < 3) {
+      pitching.push('Strike-thrower — trust him in close games.');
+    } else if (p.pit.bbip <= 2.5 && p.pit.era >= 3 && p.pit.era < 4.5) {
+      pitching.push('Mid-innings reliable — solid 1–2 inning option.');
+    }
+    if (p.pit.era >= 4.5) {
+      pitching.push('Mound work needed — focus on strike% and release point before tougher matchups.');
+    }
+    if (p.pit.kip != null && p.pit.kip > 1.0) {
+      pitching.push(`Strikeout potential (${formatNum(p.pit.kip, 2)} K/IP) — can pitch out of trouble.`);
+    }
+    if (p.pit.strike != null && p.pit.strike < 55) {
+      pitching.push(`Strike% is ${Math.round(p.pit.strike)} — first-pitch strike is the goal.`);
+    } else if (p.pit.strike != null && p.pit.strike >= 65) {
+      pitching.push(`Strong strike% (${Math.round(p.pit.strike)}) — let him work deep counts.`);
+    }
+    pitching.push(`${formatNum(p.pit.ip, 1)} IP · ${formatNum(p.pit.era, 2)} ERA · ${formatNum(p.pit.bbip, 2)} BB/IP this season.`);
+  } else {
+    pitching.push('No mound innings on file. Worth a bullpen session to see what he\u2019s got before assigning innings.');
+  }
+
+  // ---------- DEFENSE ----------
+  if (p.field) {
+    if (p.field.position) {
+      defense.push(`Primary position: <strong>${p.field.position}</strong>.`);
+    }
+    if (p.field.errPct != null && p.field.chances > 5) {
+      if (p.field.errPct > 14) {
+        defense.push(`Error rate ${formatNum(p.field.errPct,1)}% — limit to lower-impact spots until footwork tightens up.`);
+      } else if (p.field.errPct < 5) {
+        defense.push(`Reliable glove (${formatNum(p.field.errPct,1)}% errors) — premium positions earned.`);
+      } else {
+        defense.push(`Error rate ${formatNum(p.field.errPct,1)}% — workable, but soft-hands reps will help.`);
+      }
+    }
+    if (p.field.fpct != null && p.field.fpct >= 0.95 && p.field.chances > 5) {
+      defense.push(`Elite FLD% of ${formatStat(p.field.fpct)} for the position.`);
+    }
+    if (p.field.chances != null && p.field.chances <= 3) {
+      defense.push('Limited fielding sample — needs more reps before reading too much into the numbers.');
+    }
+  } else {
+    defense.push('No fielding data on file.');
+  }
+  if (defense.length === 0) defense.push('No specific defensive notes yet.');
+
+  return {
+    batting: batting.join(' '),
+    pitching: pitching.join(' '),
+    defense: defense.join(' '),
+    // Overview gets the batting summary plus the most-important pitching/defense headline
+    overview: [batting[0], delta > 0.1 || delta < -0.1 ? batting[1] : null, pitching[0] && pitching[0].indexOf('No mound') !== 0 ? `<strong>Pitching:</strong> ${pitching[0]}` : null].filter(Boolean).join(' ')
+  };
 }
 
 /* ============================================================
@@ -5516,7 +6292,55 @@ function openDrawer(playerName) {
   }
   document.getElementById('drawer-stats').innerHTML = statsHtml;
 
-  document.getElementById('drawer-note').innerHTML = p.note || 'No notes yet.';
+  // View-specific coach's note: batting tab → batting note, pitching tab → pitching note, etc.
+  const note = (p.notes && (p.notes[view] || p.notes.overview)) || (typeof p.note === 'string' ? p.note : '') || 'No notes yet.';
+  document.getElementById('drawer-note').innerHTML = note;
+  const noteHead = document.querySelector('#drawer .drawer-section h3.coach-note-title') || document.querySelector('#drawer .drawer-section:has(#drawer-note) h3');
+  // Find the H3 that precedes #drawer-note to update its label
+  const noteSection = document.getElementById('drawer-note')?.parentElement;
+  if (noteSection) {
+    const noteH3 = noteSection.querySelector('h3');
+    if (noteH3) {
+      noteH3.textContent = view === 'pitching' ? "Coach's Note · Pitching"
+        : view === 'defense' ? "Coach's Note · Defense"
+        : "Coach's Note · Hitting";
+    }
+  }
+
+  // ========== Improvement Plan ==========
+  // Use the active "view" so we only show drills relevant to the tab the
+  // parent/coach is on (batting tab → batting drills, etc.)
+  const issues = detectPlayerIssues(p, view);
+  const drills = drillsForIssues(issues, 1);
+  const planEl = document.getElementById('drawer-improvement-body');
+  const planTitle = document.getElementById('drawer-improvement-title');
+  if (planTitle) {
+    planTitle.textContent = view === 'pitching' ? 'Pitching Improvement Plan'
+      : view === 'defense' ? 'Defense Improvement Plan'
+      : 'Hitting Improvement Plan';
+  }
+
+  if (issues.length === 0) {
+    planEl.innerHTML = '<div class="improve-good">\u2713 Performing well in this area — keep doing what\u2019s working. Maintenance reps on the tee / mound are still useful.</div>';
+  } else {
+    const issueHtml = issues.map(iss => `
+      <div class="improve-issue">
+        <div class="improve-issue-title">${iss.title}</div>
+        <div class="improve-issue-why">${iss.why}</div>
+      </div>
+    `).join('');
+    const drillHtml = drills.length > 0
+      ? '<div style="margin-top:14px;font-family:\'Geist Mono\',monospace;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-mute);font-weight:700;margin-bottom:8px;">Recommended drills</div>' + drills.map(d => `
+          <div class="drill-card">
+            <div class="drill-title">${d.title}<span class="drill-audience ${d.audience}">${d.audience}</span></div>
+            <div class="drill-cue">${d.cue}</div>
+            <div class="drill-meta"><span>\u23F1 ${d.time}</span><span>\u26BE ${d.gear}</span></div>
+            <ol class="drill-steps">${d.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+          </div>
+        `).join('')
+      : '';
+    planEl.innerHTML = issueHtml + drillHtml;
+  }
 
   // Trend chart — adjusts to the view
   const trendSection = document.getElementById('drawer-trend-section');
@@ -5681,6 +6505,49 @@ function closePicker() {
 /* ============================================================
    MAIN RENDER
    ============================================================ */
+function renderPracticeFocus(players) {
+  const el = document.getElementById('practiceFocusCard');
+  if (!el) return;
+  const focus = detectTeamFocus(players);
+  if (!focus || focus.length === 0) {
+    el.innerHTML = `
+      <div class="pf-head">
+        <h2>Practice <em>Focus</em></h2>
+        <div class="pf-sub">Auto-generated · Based on team trends</div>
+      </div>
+      <div class="improve-good">No urgent focus areas — team is in a good spot. Keep maintaining fundamentals.</div>
+    `;
+    return;
+  }
+
+  const rowHtml = focus.map(f => {
+    const drills = (DRILLS[f.key] || []).slice(0, 1);
+    const drillName = drills.length > 0 ? drills[0].title : '';
+    const cue = drills.length > 0 ? drills[0].cue : '';
+    return `
+      <div class="pf-focus-row">
+        <span class="pf-priority p${f.severity}">P${f.severity}</span>
+        <div class="pf-focus-text">
+          <div class="pf-focus-title">${f.title}</div>
+          <div class="pf-focus-why">${f.why}</div>
+          ${drillName ? `<div class="pf-focus-drill">\u2192 ${drillName}${cue ? ' · ' + cue : ''}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="pf-head">
+      <h2>Practice <em>Focus</em></h2>
+      <div class="pf-sub">Auto-generated · Based on current team trends</div>
+    </div>
+    ${rowHtml}
+    <div style="font-size:11.5px;color:var(--ink-mute);margin-top:14px;line-height:1.5;font-style:italic;">
+      Tap any player on the Batting / Pitching / Defense tabs for individual drill recommendations.
+    </div>
+  `;
+}
+
 function renderAll() {
   PLAYERS = buildPlayers();
 
@@ -5699,6 +6566,7 @@ function renderAll() {
   renderLineupBuilder(PLAYERS);
   renderInsights(PLAYERS);
   renderMatchups();
+  renderPracticeFocus(PLAYERS);
 
   renderTeamTrend(PLAYERS);
   renderOpsBarChart(PLAYERS);
