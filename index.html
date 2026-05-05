@@ -931,8 +931,21 @@ body.viewer-mode .viewer-banner { display: flex; }
   .stat .stat-trend { font-size: 10px; }
   .stat .stat-label { font-size: 9px; letter-spacing: 1.5px; margin-bottom: 6px; }
 
-  .tabs { margin-bottom: 16px; padding: 4px; }
-  .tab { padding: 9px 14px; font-size: 11px; min-height: 40px; }
+  .tabs {
+    margin-bottom: 16px;
+    padding: 4px;
+    flex-wrap: wrap;
+    overflow-x: visible;
+    justify-content: center;
+  }
+  .tab {
+    padding: 9px 14px;
+    font-size: 11px;
+    min-height: 40px;
+    flex: 1 1 auto;
+    text-align: center;
+    min-width: 0;
+  }
 
   .card { padding: 16px; border-radius: var(--radius); }
   .card-header { margin-bottom: 12px; padding-bottom: 8px; }
