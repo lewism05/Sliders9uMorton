@@ -8034,6 +8034,15 @@ async function onSwingRecordingStop() {
     setSwingProgress(95);
     setSwingAnalyzeStatus('Computing rating…');
     const result = scoreSwing(poses);
+    if (result.rejected) {
+      // Quality gate failed — no person clearly in frame. Don't show a fake
+      // score, show the specific reason and let them try again.
+      const reason = (result.feedback && result.feedback[0] && result.feedback[0].text)
+        || "We couldn't reliably detect a person swinging. Try again with the full body in frame and good lighting.";
+      document.getElementById('swingErrorMsg').textContent = reason;
+      showSwingStage('swingStageError');
+      return;
+    }
     swingLastResult = { ...result, recordedAt: Date.now() };
     setSwingProgress(100);
     setTimeout(() => renderSwingResults(swingLastResult), 200);
@@ -8108,14 +8117,78 @@ function seekVideo(video, time) {
    ---------------------------------------------------------------- */
 function scoreSwing(poses) {
   const KP = { NOSE: 0, LSHO: 5, RSHO: 6, LWR: 9, RWR: 10, LHIP: 11, RHIP: 12, LKNE: 13, RKNE: 14, LANK: 15, RANK: 16 };
-  const goodKp = (p, idx) => p.kp[idx] && p.kp[idx].score >= 0.3;
+  // Per-keypoint confidence threshold. MoveNet returns a "pose" object for
+  // every frame even when nothing is in view — those false detections score
+  // < 0.3 across most keypoints. 0.5 is the sweet spot: real visible joints
+  // typically clear 0.6+, noise rarely gets above 0.4.
+  const KP_CONF = 0.5;
+  const goodKp = (p, idx) => p.kp[idx] && p.kp[idx].score >= KP_CONF;
   const conf = (p, idx) => goodKp(p, idx) ? p.kp[idx] : null;
 
-  // ----- 1. Head stability: how much does the nose move? -----
+  /* ===== QUALITY GATE =====
+     Before computing any rating, verify a person was actually detected.
+     Without this, an empty-frame video gets ghosted detections that randomly
+     satisfy "low head movement" and "extended follow-through" checks and
+     produce false 6-7/10 scores. Reject early instead. */
+  const criticalKps = [KP.NOSE, KP.LSHO, KP.RSHO, KP.LHIP, KP.RHIP, KP.LANK, KP.RANK];
+  let confidentDetections = 0;
+  let totalChecks = 0;
+  let avgConfSum = 0;
+  let framesWithFullBody = 0;
+
+  for (const p of poses) {
+    let frameValid = 0;
+    for (const kpIdx of criticalKps) {
+      const kp = p.kp[kpIdx];
+      if (kp) {
+        avgConfSum += kp.score;
+        totalChecks++;
+        if (kp.score >= KP_CONF) {
+          confidentDetections++;
+          frameValid++;
+        }
+      }
+    }
+    // A "full body" frame has 5+ of 7 critical keypoints visible
+    if (frameValid >= 5) framesWithFullBody++;
+  }
+  const detectionRate = totalChecks > 0 ? confidentDetections / totalChecks : 0;
+  const avgConfidence = totalChecks > 0 ? avgConfSum / totalChecks : 0;
+  const fullBodyRate = poses.length > 0 ? framesWithFullBody / poses.length : 0;
+
+  // Reject if pose detection quality is too low to be trusted.
+  if (detectionRate < 0.55 || avgConfidence < 0.45 || fullBodyRate < 0.5) {
+    let issue;
+    if (detectionRate < 0.25 || avgConfidence < 0.30) {
+      issue = "No person was clearly visible in the video. Make sure you're in the camera's view, with good lighting and the full body — head to feet — in frame.";
+    } else if (fullBodyRate < 0.5) {
+      issue = "Only part of your body was in frame. Stand further back so head and feet are both visible at the same time, then try again.";
+    } else if (detectionRate < 0.55) {
+      issue = "Body detection wasn't reliable — likely lighting or partial framing. Try a brighter spot and stand sideways with full body visible.";
+    } else {
+      issue = "Pose tracking confidence was low. Try again with steadier framing, brighter lighting, and a plain background if possible.";
+    }
+    return {
+      score: 0,
+      label: 'Could Not Analyze',
+      feedback: [{ type: 'work', text: issue }],
+      rejected: true,
+      metrics: {
+        detectionRate: +detectionRate.toFixed(2),
+        avgConfidence: +avgConfidence.toFixed(2),
+        fullBodyRate: +fullBodyRate.toFixed(2)
+      }
+    };
+  }
+
+  /* ----- 1. Head stability: how much does the nose move? -----
+     Require at least 6 frames where nose was confidently detected, otherwise
+     don't score this category at all. Previous version awarded 3/3 for any
+     "low movement" run, even if it was just 4 noisy detections. */
   const noses = poses.map(p => conf(p, KP.NOSE)).filter(Boolean);
   let headScore = 0; // 0-3
   let headFeedback = null;
-  if (noses.length >= 4) {
+  if (noses.length >= 6 && fullBodyRate >= 0.6) {
     const xs = noses.map(n => n.x);
     const ys = noses.map(n => n.y);
     const xRange = Math.max(...xs) - Math.min(...xs);
@@ -8127,12 +8200,16 @@ function scoreSwing(poses) {
       if (!sho || !hip) return null;
       return Math.abs(hip.y - sho.y);
     }).filter(Boolean);
-    const torsoAvg = torsoLens.length > 0 ? torsoLens.reduce((a,b)=>a+b,0)/torsoLens.length : 100;
-    const headDrift = Math.max(xRange, yRange) / Math.max(1, torsoAvg);
-    if (headDrift < 0.18) { headScore = 3; headFeedback = { type:'good', text:'Excellent head stability — eyes locked on the ball.' }; }
-    else if (headDrift < 0.32) { headScore = 2; headFeedback = { type:'good', text:'Solid head control — held steady through contact.' }; }
-    else if (headDrift < 0.55) { headScore = 1; headFeedback = { type:'work', text:'Head moved a bit during the swing. Try "see the ball, hit the ball" — keep eyes on contact.' }; }
-    else { headScore = 0; headFeedback = { type:'work', text:'Lots of head movement. The single biggest fix at 9U: keep the head locked on the ball through contact.' }; }
+    // Require enough confident torso measurements before normalizing — otherwise
+    // a noisy small torsoAvg makes ANY head drift look enormous (or vice versa).
+    if (torsoLens.length >= 6) {
+      const torsoAvg = torsoLens.reduce((a,b)=>a+b,0) / torsoLens.length;
+      const headDrift = Math.max(xRange, yRange) / Math.max(20, torsoAvg);  // clamp tiny torso to 20px floor
+      if (headDrift < 0.18) { headScore = 3; headFeedback = { type:'good', text:'Excellent head stability — eyes locked on the ball.' }; }
+      else if (headDrift < 0.32) { headScore = 2; headFeedback = { type:'good', text:'Solid head control — held steady through contact.' }; }
+      else if (headDrift < 0.55) { headScore = 1; headFeedback = { type:'work', text:'Head moved a bit during the swing. Try "see the ball, hit the ball" — keep eyes on contact.' }; }
+      else { headScore = 0; headFeedback = { type:'work', text:'Lots of head movement. The single biggest fix at 9U: keep the head locked on the ball through contact.' }; }
+    }
   }
 
   // ----- 2. Stance: feet roughly shoulder-width, knees bent at start -----
@@ -8171,7 +8248,7 @@ function scoreSwing(poses) {
       angleDeltas.push(delta);
     }
   }
-  if (angleDeltas.length >= 4) {
+  if (angleDeltas.length >= 6) {
     const maxDelta = Math.max(...angleDeltas);
     // 0.35 rad ~ 20°, 0.6 rad ~ 34°
     if (maxDelta > 0.55) { rotScore = 2; rotFeedback = { type:'good', text:'Strong rotation — hips and shoulders separated for power.' }; }
