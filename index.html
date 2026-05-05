@@ -2113,6 +2113,75 @@ table tbody tr:hover td:first-child {
   color: var(--ink-soft);
 }
 
+/* ========== WORTH A LOOK (prospective pitchers) ========== */
+.prospect-block {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(255,107,26,0.3);
+}
+.tier-badge.prospect-badge {
+  background: linear-gradient(135deg, #fff4e0, #ffe8c4);
+  color: var(--orange-deep);
+  font-size: 16px;
+}
+.prospect-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 38px;
+}
+.prospect-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--line-glass);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-wrap: wrap;
+}
+.prospect-row:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,107,26,0.4);
+  box-shadow: 0 4px 12px -4px rgba(255,107,26,0.2);
+}
+.prospect-row .player-avatar {
+  width: 26px; height: 26px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.prospect-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 13.5px;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+  flex-shrink: 0;
+}
+.prospect-reason {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.4px;
+  color: var(--orange-deep);
+  text-transform: uppercase;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .prospect-list { padding-left: 0; }
+  .prospect-row { padding: 10px 12px; }
+  .prospect-name { font-size: 13px; }
+  .prospect-reason { font-size: 10px; flex-basis: 100%; padding-left: 34px; }
+}
+
 /* ========== FIELD ========== */
 .field-wrap {
   position: relative;
@@ -5666,34 +5735,111 @@ function renderBattingTable(players) {
 
 function renderPitchingSection(players) {
   const pitchers = players.filter(p => p.pit && p.pit.ip > 0);
-  const t1 = pitchers.filter(p => p.pit.bbip <= 1.5 && p.pit.era <= 2.7);
-  const t2 = pitchers.filter(p => !t1.includes(p) && p.pit.bbip <= 2.7 && p.pit.era <= 4.0);
+
+  // Tier thresholds tuned for 9U realities: walks matter more than ERA.
+  // Tier 1 — Win-the-Game Arms: very low BB/IP + manageable ERA + real sample
+  // Tier 2 — Reliable / Mid Innings: strike-thrower (BB/IP under 2) with some innings,
+  //          or anyone with a sub-1.0 BB/IP regardless of ERA
+  // Tier 3 — Develop / Risk: everyone else who's pitched
+  const t1 = pitchers.filter(p =>
+    p.pit.bbip <= 1.0 && p.pit.era <= 4.5 && p.pit.ip >= 5
+  );
+  const t2 = pitchers.filter(p =>
+    !t1.includes(p) && (
+      (p.pit.bbip <= 2.0 && p.pit.ip >= 2) ||
+      (p.pit.bbip <= 1.0 && p.pit.ip >= 2)
+    )
+  );
   const t3 = pitchers.filter(p => !t1.includes(p) && !t2.includes(p));
 
+  // "Worth a Look" — players with limited or no mound time who profile as
+  // potential pitchers based on athletic indicators (top OPS, low K-rate as
+  // hitter = good hand-eye, infield arm spot).
+  const prospectivePitchers = players
+    .filter(p => {
+      const ip = p.pit?.ip || 0;
+      if (ip >= 5) return false;
+      const ops = p.bat?.ops || 0;
+      const k = p.bat?.k ?? 100;
+      const pos = p.field?.position || '';
+      let score = 0;
+      if (ops > 1.0) score += 2;
+      else if (ops > 0.85) score += 1.5;
+      else if (ops > 0.65) score += 0.5;
+      if (k < 15) score += 1.5;
+      else if (k < 22) score += 0.5;
+      if (['C','SS','3B','2B','P'].includes(pos)) score += 1;
+      // Strike-thrower with limited innings is the strongest signal — promote them
+      if (p.pit && p.pit.ip > 0 && p.pit.bbip <= 1.5) score += 1.5;
+      return score >= 2;
+    })
+    .sort((a, b) => {
+      // Existing strike-thrower with limited innings beats untested
+      const aBB = a.pit?.bbip;
+      const bBB = b.pit?.bbip;
+      if (aBB != null && bBB == null) return -1;
+      if (bBB != null && aBB == null) return 1;
+      if (aBB != null && bBB != null && Math.abs(aBB - bBB) > 0.3) return aBB - bBB;
+      return (b.bat?.ops || 0) - (a.bat?.ops || 0);
+    })
+    .slice(0, 4);
+
+  function prospectReason(p) {
+    const bits = [];
+    const ip = p.pit?.ip || 0;
+    if (p.pit && p.pit.bbip != null && p.pit.bbip <= 1.0 && ip > 0 && ip < 5) {
+      bits.push(`Strike-thrower (${formatNum(p.pit.bbip,2)} BB/IP) — needs more innings`);
+    } else if (ip === 0) {
+      bits.push('Zero mound time — bullpen test');
+    } else if (ip < 2) {
+      bits.push(`Only ${formatNum(ip,1)} IP — small sample`);
+    }
+    if ((p.bat?.ops || 0) > 1.0) bits.push(`${formatStat(p.bat.ops)} OPS athlete`);
+    else if ((p.bat?.ops || 0) > 0.85) bits.push(`${formatStat(p.bat.ops)} OPS`);
+    if ((p.bat?.k ?? 100) < 15) bits.push(`${Math.round(p.bat.k)}% K — elite hand-eye`);
+    if (['C','SS','3B'].includes(p.field?.position)) bits.push(`Plays ${p.field.position}`);
+    return bits.slice(0, 2).join(' · ');
+  }
+
   const tiersEl = document.getElementById('pitcher-tiers');
-  if (pitchers.length === 0) {
+  if (pitchers.length === 0 && prospectivePitchers.length === 0) {
     tiersEl.innerHTML = '<div class="empty-state">Upload pitching CSV to see tiers.</div>';
   } else {
+    const t1Html = t1.length
+      ? t1.map(p => `<span class="tier-chip t1" data-player="${p.name}">${p.short} · ${formatNum(p.pit.era,2)} ERA · ${formatNum(p.pit.bbip,2)} BB/IP</span>`).join('')
+      : '<span class="text-mute">— No arm currently meets the bar (sub-1.0 BB/IP, sub-4.5 ERA, 5+ IP). Drennan is closest if you must start someone.</span>';
+    const t2Html = t2.length
+      ? t2.map(p => `<span class="tier-chip t2" data-player="${p.name}">${p.short} · ${formatNum(p.pit.era,2)} ERA · ${formatNum(p.pit.bbip,2)} BB/IP</span>`).join('')
+      : '<span class="text-mute">—</span>';
+    const t3Html = t3.length
+      ? t3.map(p => `<span class="tier-chip t3" data-player="${p.name}">${p.short} · ${formatNum(p.pit.era,2)} ERA</span>`).join('')
+      : '<span class="text-mute">—</span>';
+
+    const prospectHtml = prospectivePitchers.length
+      ? prospectivePitchers.map(p => `
+          <div class="prospect-row" data-player="${p.name}">
+            <div class="prospect-name"><span class="player-avatar tier-${p.tier}">${p.short[0]}</span>${p.name}</div>
+            <div class="prospect-reason">${prospectReason(p)}</div>
+          </div>
+        `).join('')
+      : '<div class="text-mute" style="padding:8px 0;font-size:12.5px;">No untested arms with strong athletic indicators right now.</div>';
+
     tiersEl.innerHTML = `
       <div class="tier-block">
         <div class="tier-header">
           <div class="tier-badge">1</div>
           <div class="tier-name">Win-the-Game Arms</div>
-          <div class="tier-desc">Trust in any spot</div>
+          <div class="tier-desc">Sub-1.0 BB/IP · ERA &lt; 4.5 · 5+ IP</div>
         </div>
-        <div class="tier-players">
-          ${t1.length ? t1.map(p => `<span class="tier-chip t1" data-player="${p.name}">${p.short} · ${formatNum(p.pit.era,2)} ERA</span>`).join('') : '<span class="text-mute">—</span>'}
-        </div>
+        <div class="tier-players">${t1Html}</div>
       </div>
       <div class="tier-block">
         <div class="tier-header">
           <div class="tier-badge">2</div>
           <div class="tier-name">Reliable / Mid Innings</div>
-          <div class="tier-desc">Situational</div>
+          <div class="tier-desc">Strike-throwers · BB/IP under 2.0</div>
         </div>
-        <div class="tier-players">
-          ${t2.length ? t2.map(p => `<span class="tier-chip t2" data-player="${p.name}">${p.short} · ${formatNum(p.pit.era,2)} ERA</span>`).join('') : '<span class="text-mute">—</span>'}
-        </div>
+        <div class="tier-players">${t2Html}</div>
       </div>
       <div class="tier-block">
         <div class="tier-header">
@@ -5701,13 +5847,20 @@ function renderPitchingSection(players) {
           <div class="tier-name">Develop / Risk</div>
           <div class="tier-desc">Low-pressure only</div>
         </div>
-        <div class="tier-players">
-          ${t3.length ? t3.map(p => `<span class="tier-chip t3" data-player="${p.name}">${p.short} · ${formatNum(p.pit.era,2)} ERA</span>`).join('') : '<span class="text-mute">—</span>'}
+        <div class="tier-players">${t3Html}</div>
+      </div>
+      <div class="tier-block prospect-block">
+        <div class="tier-header">
+          <div class="tier-badge prospect-badge">★</div>
+          <div class="tier-name">Worth a Look</div>
+          <div class="tier-desc">Untested / under-tested arms · Athletic indicators</div>
         </div>
+        <div class="prospect-list">${prospectHtml}</div>
       </div>
     `;
   }
   document.querySelectorAll('.tier-chip').forEach(c => c.addEventListener('click', () => openDrawer(c.dataset.player)));
+  document.querySelectorAll('.prospect-row').forEach(r => r.addEventListener('click', () => openDrawer(r.dataset.player)));
 
   const tbody = document.getElementById('pitching-tbody');
   if (pitchers.length === 0) {
@@ -5716,7 +5869,7 @@ function renderPitchingSection(players) {
     const sorted = sortBy(pitchers, p => -(p.pit.era || 99));
     tbody.innerHTML = sorted.map(p => {
       const eraDelta = (p.pit.eraL4 || p.pit.era) - p.pit.era;
-      const role = t1.includes(p) ? 'Ace/Closer' : t2.includes(p) ? 'Mid' : 'Develop';
+      const role = t1.includes(p) ? 'Ace' : t2.includes(p) ? 'Mid' : 'Develop';
       const roleClass = t1.includes(p) ? 1 : t2.includes(p) ? 2 : 3;
       const trendCls = eraDelta < -0.2 ? 'hot' : eraDelta > 0.2 ? 'cold' : 'steady';
       const trendLabel = eraDelta < -0.2 ? '▲ Better' : eraDelta > 0.2 ? '▼ Worse' : '— Steady';
