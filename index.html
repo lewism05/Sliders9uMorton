@@ -3308,11 +3308,6 @@ table tbody tr:hover td:first-child {
       <div class="stat-value text-value" id="stat-topArm">—</div>
       <div class="stat-trend up" id="stat-topArmTrend">—</div>
     </div>
-    <div class="stat">
-      <div class="stat-label">Watch List</div>
-      <div class="stat-value text-value" id="stat-watch">—</div>
-      <div class="stat-trend down" id="stat-watchTrend">—</div>
-    </div>
   </section>
 
   <!-- ============ TABS ============ -->
@@ -3671,15 +3666,6 @@ table tbody tr:hover td:first-child {
     </div>
 
     <div class="grid grid-2" id="insights-grid"></div>
-
-    <div class="section-head">
-      <h2>Player <em>Watch List</em></h2>
-      <div class="card-subtitle">Manage these specifically</div>
-    </div>
-
-    <div class="card">
-      <div id="watchlist"></div>
-    </div>
   </section>
 
   <!-- ============ FOOTNOTE ============ -->
@@ -6537,8 +6523,7 @@ function renderEmpty() {
   document.getElementById('stat-teamObp').textContent = '—';
   document.getElementById('stat-hotBat').textContent = '—';
   document.getElementById('stat-topArm').textContent = '—';
-  document.getElementById('stat-watch').textContent = '—';
-  ['stat-teamOpsTrend','stat-teamObpTrend','stat-hotBatTrend','stat-topArmTrend','stat-watchTrend'].forEach(id => {
+  ['stat-teamOpsTrend','stat-teamObpTrend','stat-hotBatTrend','stat-topArmTrend'].forEach(id => {
     const el = document.getElementById(id);
     el.textContent = 'No data';
     el.className = 'stat-trend neutral';
@@ -6549,7 +6534,7 @@ function renderEmpty() {
     document.getElementById(id).innerHTML = '<div style="color: rgba(255,255,255,0.5); padding: 20px; text-align:center; grid-column: 1/-1;">Upload batting data to generate lineup.</div>';
   });
 
-  ['hot-hitters','cold-hitters','top-obp','battery-list','watchlist','lineup-rationale-list','pitcher-tiers'].forEach(id => {
+  ['hot-hitters','cold-hitters','top-obp','battery-list','lineup-rationale-list','pitcher-tiers'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '<div class="empty-state">Upload stats to populate this section.</div>';
   });
@@ -6616,16 +6601,6 @@ function renderStatBar(players) {
     document.getElementById('stat-topArm').textContent = '—';
     document.getElementById('stat-topArmTrend').textContent = 'No pitching data';
     document.getElementById('stat-topArmTrend').className = 'stat-trend neutral';
-  }
-
-  const watch = withDelta.filter(p => p._d < -0.1 || p.bat.k > 25).length;
-  document.getElementById('stat-watch').innerHTML = watch + '<span class="unit">players</span>';
-  if (watch > 0) {
-    document.getElementById('stat-watchTrend').textContent = '▼ trending cold';
-    document.getElementById('stat-watchTrend').className = 'stat-trend down';
-  } else {
-    document.getElementById('stat-watchTrend').textContent = 'All trending OK';
-    document.getElementById('stat-watchTrend').className = 'stat-trend up';
   }
 
   // Compute games played from the schedule — count games whose date has
@@ -7150,7 +7125,6 @@ function renderLineupBuilder(players) {
 function renderInsights(players) {
   if (!players.length) {
     document.getElementById('insights-grid').innerHTML = '<div class="insight-card"><p>Upload stats to generate coaching insights.</p></div>';
-    document.getElementById('watchlist').innerHTML = '<div class="empty-state">No players to watch yet.</div>';
     return;
   }
 
@@ -7237,38 +7211,6 @@ function renderInsights(players) {
       <div class="action">${ins.action}</div>
     </div>
   `).join('');
-
-  const watchPlayers = [
-    ...sortBy(withDelta.filter(p => p._d > 0.1), '_d').slice(0, 2),
-    ...sortBy(withDelta.filter(p => p._d < -0.1), '_d', false).slice(0, 2)
-  ];
-  const seen = new Set();
-  const unique = watchPlayers.filter(p => { if (seen.has(p.name)) return false; seen.add(p.name); return true; });
-
-  const watchlistEl = document.getElementById('watchlist');
-  if (unique.length === 0) {
-    watchlistEl.innerHTML = '<div class="empty-state">No players need special attention this stretch.</div>';
-  } else {
-    watchlistEl.innerHTML = unique.map(p => {
-      const action = p._d > 0.1 ? 'PROMOTE · ADD AT-BATS'
-                  : p._d < -0.1 && p.tier === 1 ? 'HOLD · TRUST SEASON'
-                  : p._d < -0.1 ? 'SLOT 7-8 · TAKE PRESSURE OFF'
-                  : 'MONITOR';
-      return `
-        <div class="player-row" data-player="${p.name}" style="padding: 14px 0; cursor:pointer;">
-          <div class="pname">
-            <div class="player-avatar tier-${p.tier}">${p.short[0]}</div>
-            <div>
-              <div>${p.name} <span class="tag tier-${p.tier}" style="margin-left: 6px;">${tierName(p.tier)}</span></div>
-              <div style="font-size: 11px; color: var(--ink-mute); font-family: 'Geist Mono', monospace; margin-top: 4px;">${action}</div>
-            </div>
-          </div>
-          <div class="pchange ${p._d>0?'up':'down'}">${p._d>0?'+':''}${formatStat(p._d)}</div>
-        </div>
-      `;
-    }).join('');
-    watchlistEl.querySelectorAll('.player-row').forEach(r => r.addEventListener('click', () => openDrawer(r.dataset.player)));
-  }
 }
 
 function renderTeamTrend(players) {
