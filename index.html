@@ -2937,15 +2937,7 @@ table tbody tr:hover td:first-child {
       <div class="card-subtitle">Last 4 Games</div>
     </div>
 
-    <div class="grid grid-3">
-      <div class="card streak-card improved">
-        <div class="card-header">
-          <div class="card-title">📈 Most Improved</div>
-          <div class="card-subtitle">Δ OPS L4 vs Season</div>
-        </div>
-        <div id="most-improved"></div>
-      </div>
-
+    <div class="grid grid-2">
       <div class="card streak-card cold">
         <div class="card-header">
           <div class="card-title">🧊 Cooling Off</div>
@@ -6053,7 +6045,7 @@ function renderEmpty() {
     document.getElementById(id).innerHTML = '<div style="color: rgba(255,255,255,0.5); padding: 20px; text-align:center; grid-column: 1/-1;">Upload batting data to generate lineup.</div>';
   });
 
-  ['hot-hitters','most-improved','cold-hitters','top-obp','battery-list','watchlist','lineup-rationale-list','pitcher-tiers'].forEach(id => {
+  ['hot-hitters','cold-hitters','top-obp','battery-list','watchlist','lineup-rationale-list','pitcher-tiers'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '<div class="empty-state">Upload stats to populate this section.</div>';
   });
@@ -6169,12 +6161,6 @@ function renderOverviewLists(players) {
   coldEl.innerHTML = cold.length
     ? cold.map(p => renderPlayerRow(p, `<span class="arrow">▼</span>${formatStat(p._d)}`, 'down')).join('')
     : '<div class="empty-state">Nobody trending cold.</div>';
-
-  const improvedEl = document.getElementById('most-improved');
-  const improved = sortBy(withDelta, '_d').filter(p => p._d > 0.05).slice(0, 4);
-  improvedEl.innerHTML = improved.length
-    ? improved.map(p => renderPlayerRow(p, `<span class="arrow">▲</span>+${formatStat(p._d)}`, 'up')).join('')
-    : '<div class="empty-state">Need more games for trend data.</div>';
 
   const obpEl = document.getElementById('top-obp');
   const top = sortBy(players, p => p.bat.obp).slice(0, 4);
