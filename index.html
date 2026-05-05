@@ -100,20 +100,22 @@ body::before {
 
 /* ========== HEADER ========== */
 .masthead {
+  position: relative;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   padding-bottom: 28px;
   border-bottom: 1px solid var(--line);
   margin-bottom: 4px;
 }
 
-.brand { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.brand { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 
 .brand-logo {
   display: block;
   width: 100%;
-  max-width: 460px;
+  max-width: 520px;
   height: auto;
   user-select: none;
   -webkit-user-drag: none;
@@ -128,7 +130,12 @@ body::before {
   font-weight: 600;
 }
 
-.meta-strip { text-align: right; }
+.meta-strip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  text-align: right;
+}
 .meta-strip .label {
   font-family: 'Geist Mono', monospace;
   font-size: 10px;
@@ -553,6 +560,7 @@ textarea.sync-input { min-height: 70px; resize: vertical; }
 body.viewer-mode .data-actions > #toggleUploadBtn,
 body.viewer-mode .data-actions > #clearDataBtn,
 body.viewer-mode .data-actions > #importBtn,
+body.viewer-mode .data-actions > #exportBtn,
 body.viewer-mode .data-actions > #syncPill,
 body.viewer-mode .data-bar-panel { display: none !important; }
 
@@ -903,6 +911,7 @@ body.viewer-mode .viewer-banner { display: flex; }
   .masthead { padding-bottom: 16px; flex-wrap: wrap; gap: 12px; }
   .brand-logo { max-width: 280px; }
   .brand .eyebrow { font-size: 10px; letter-spacing: 1.5px; }
+  .meta-strip { position: static; margin-top: 8px; text-align: center; }
   .meta-strip .value { font-size: 20px; }
 
   .data-bar-summary { padding: 10px 12px; }
@@ -1766,6 +1775,34 @@ body.viewer-mode .viewer-banner { display: flex; }
   font-weight: 700;
 }
 
+/* Two-name 9-spot row when there's a 10th player on the roster */
+.lineup-row.co-batters { align-items: flex-start; padding-top: 12px; padding-bottom: 12px; }
+.lineup-row.co-batters .lineup-num { margin-top: 2px; }
+.lineup-co-name {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  color: rgba(255,255,255,0.95);
+}
+.lineup-co-name + .lineup-co-name {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(255,255,255,0.12);
+}
+.lineup-co-name-alt span:first-child { color: rgba(255,255,255,0.78); font-weight: 600; }
+.lineup-co-stat {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11.5px;
+  color: var(--orange-light);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.lineup-co-name-alt .lineup-co-stat { color: rgba(255,140,80,0.85); }
+
 /* ========== STREAK CARDS ========== */
 .streak-card.hot { border-left: 3px solid var(--orange); }
 .streak-card.cold { border-left: 3px solid var(--blue); }
@@ -1911,6 +1948,25 @@ td.player {
 }
 td.player .player-cell { display: flex; align-items: center; gap: 10px; }
 tr:hover td { background: rgba(255,255,255,0.45); cursor: pointer; }
+
+/* Freeze the first column (player name) when scrolling horizontally on stat tables. */
+table thead th:first-child,
+table tbody td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: rgba(252, 250, 245, 0.98);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 1px 0 0 var(--line-soft);
+}
+table thead th:first-child {
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 3;
+}
+table tbody tr:hover td:first-child {
+  background: rgba(255, 240, 220, 0.98);
+}
 
 .tag {
   display: inline-block;
@@ -2746,8 +2802,8 @@ tr:hover td { background: rgba(255,255,255,0.45); cursor: pointer; }
   <h2 id="drawer-name">Player Name</h2>
   <div class="drawer-sub" id="drawer-role">Role · Tier</div>
   <div class="drawer-stats" id="drawer-stats"></div>
-  <div class="drawer-section">
-    <h3>Trend (OPS by window)</h3>
+  <div class="drawer-section" id="drawer-trend-section">
+    <h3 id="drawer-trend-title">Trend (OPS by window)</h3>
     <div class="chart-box" style="height: 180px;"><canvas id="drawerChart"></canvas></div>
   </div>
   <div class="drawer-section">
@@ -5028,11 +5084,39 @@ function renderLineupCard(targetId, ratedLineup, mode='view', scenario='standard
     el.innerHTML = '<div style="color: rgba(255,255,255,0.5); padding: 20px; text-align:center; grid-column: 1/-1;">Upload batting data to generate lineup.</div>';
     return;
   }
+
+  // Find a 10th player to share the 9-spot — anyone with batting data who isn't already
+  // in the 9-row lineup. Picked by best L4 OPS so it's the strongest available reset bat.
+  const lineupNames = new Set(ratedLineup.map(r => r.player.name));
+  const tenthPlayer = (PLAYERS || [])
+    .filter(p => !lineupNames.has(p.name) && p.bat && (p.bat.ops > 0 || p.bat.avg > 0))
+    .sort((a, b) => (b.bat.opsL4 || b.bat.ops || 0) - (a.bat.opsL4 || a.bat.ops || 0))[0];
+
   el.innerHTML = ratedLineup.map((r, i) => {
     const p = r.player;
+    const isLast = i === ratedLineup.length - 1;
+    const showCo = isLast && tenthPlayer;
     const editIcon = mode === 'editable'
       ? `<span class="lineup-edit-icon" aria-hidden="true">⇄</span>`
       : '';
+
+    if (showCo) {
+      const opsA = formatStat(p.bat.opsL4 || p.bat.ops);
+      const opsB = formatStat(tenthPlayer.bat.opsL4 || tenthPlayer.bat.ops);
+      return `
+        <div class="lineup-row co-batters" data-player="${p.name}" data-slot="${i}" data-mode="${mode}">
+          <div class="lineup-num">${i+1}</div>
+          <div class="lineup-info">
+            <div class="lineup-co-name"><span>${p.name}</span><span class="lineup-co-stat">${opsA}</span></div>
+            <div class="lineup-co-name lineup-co-name-alt"><span>${tenthPlayer.name}</span><span class="lineup-co-stat">${opsB}</span></div>
+            <div class="lineup-role">${r.reason || 'Two reset bats — pick whichever fits the pitcher'}</div>
+          </div>
+          <span class="grade-badge ${r.grade.cls}">${r.grade.letter}</span>
+          ${editIcon}
+        </div>
+      `;
+    }
+
     return `
       <div class="lineup-row" data-player="${p.name}" data-slot="${i}" data-mode="${mode}">
         <div class="lineup-num">${i+1}</div>
@@ -5376,43 +5460,125 @@ function renderWalksChart(players) {
 function openDrawer(playerName) {
   const p = PLAYERS.find(x => x.name === playerName);
   if (!p) return;
-  document.getElementById('drawer-name').textContent = p.name;
-  document.getElementById('drawer-role').textContent = `${p.role} · ${tierName(p.tier)} Tier`;
 
-  document.getElementById('drawer-stats').innerHTML = `
-    <div class="drawer-stat"><div class="lbl">AVG</div><div class="val">${formatStat(p.bat.avg)}</div></div>
-    <div class="drawer-stat"><div class="lbl">OBP</div><div class="val">${formatStat(p.bat.obp)}</div></div>
-    <div class="drawer-stat"><div class="lbl">SLG</div><div class="val">${formatStat(p.bat.slg)}</div></div>
-    <div class="drawer-stat"><div class="lbl">OPS</div><div class="val">${formatStat(p.bat.ops)}</div></div>
-    <div class="drawer-stat"><div class="lbl">L4 OPS</div><div class="val">${formatStat(p.bat.opsL4)}</div></div>
-    <div class="drawer-stat"><div class="lbl">K %</div><div class="val">${Math.round(p.bat.k)}</div></div>
-  `;
+  // Decide which "view" to show based on the active main tab.
+  // - Pitching tab → pitching stats + ERA trend
+  // - Defense tab  → fielding stats (no trend chart, no useful window data)
+  // - Anything else → batting stats + OPS trend (the dashboard's default)
+  let view = 'batting';
+  if (currentMainTab === 'pitching' && p.pit && p.pit.ip > 0) view = 'pitching';
+  else if (currentMainTab === 'defense' && p.field) view = 'defense';
+
+  document.getElementById('drawer-name').textContent = p.name;
+
+  // Role line — use the most relevant context for the chosen view
+  let roleLine = `${p.role} · ${tierName(p.tier)} Tier`;
+  if (view === 'pitching') {
+    const pTier = (p.pit.bbip <= 1.5 && p.pit.era <= 2.7) ? 'Tier 1'
+                : (p.pit.bbip <= 2.7 && p.pit.era <= 4.0) ? 'Tier 2' : 'Tier 3';
+    roleLine = `Pitching · ${pTier} arm`;
+  } else if (view === 'defense') {
+    roleLine = `Fielding${p.field?.position ? ' · ' + p.field.position : ''}`;
+  }
+  document.getElementById('drawer-role').textContent = roleLine;
+
+  // Build the stats grid for the chosen view
+  let statsHtml;
+  if (view === 'pitching') {
+    statsHtml = `
+      <div class="drawer-stat"><div class="lbl">ERA</div><div class="val">${formatNum(p.pit.era, 2)}</div></div>
+      <div class="drawer-stat"><div class="lbl">IP</div><div class="val">${formatNum(p.pit.ip, 1)}</div></div>
+      <div class="drawer-stat"><div class="lbl">BB / IP</div><div class="val">${formatNum(p.pit.bbip, 2)}</div></div>
+      <div class="drawer-stat"><div class="lbl">K / IP</div><div class="val">${formatNum(p.pit.kip, 2)}</div></div>
+      <div class="drawer-stat"><div class="lbl">Strike %</div><div class="val">${p.pit.strike != null ? Math.round(p.pit.strike) : '—'}</div></div>
+      <div class="drawer-stat"><div class="lbl">L4 ERA</div><div class="val">${formatNum(p.pit.eraL4, 2)}</div></div>
+    `;
+  } else if (view === 'defense') {
+    const f = p.field || {};
+    statsHtml = `
+      <div class="drawer-stat"><div class="lbl">Position</div><div class="val">${f.position || '—'}</div></div>
+      <div class="drawer-stat"><div class="lbl">FLD %</div><div class="val">${f.fpct ? formatStat(f.fpct) : '—'}</div></div>
+      <div class="drawer-stat"><div class="lbl">Errors</div><div class="val">${f.errors ?? '—'}</div></div>
+      <div class="drawer-stat"><div class="lbl">Chances</div><div class="val">${f.chances ?? '—'}</div></div>
+      <div class="drawer-stat"><div class="lbl">Err %</div><div class="val">${f.errPct != null ? formatNum(f.errPct, 1) : '—'}</div></div>
+      <div class="drawer-stat"><div class="lbl">OPS</div><div class="val">${formatStat(p.bat?.ops)}</div></div>
+    `;
+  } else {
+    // batting (default)
+    statsHtml = `
+      <div class="drawer-stat"><div class="lbl">AVG</div><div class="val">${formatStat(p.bat.avg)}</div></div>
+      <div class="drawer-stat"><div class="lbl">OBP</div><div class="val">${formatStat(p.bat.obp)}</div></div>
+      <div class="drawer-stat"><div class="lbl">SLG</div><div class="val">${formatStat(p.bat.slg)}</div></div>
+      <div class="drawer-stat"><div class="lbl">OPS</div><div class="val">${formatStat(p.bat.ops)}</div></div>
+      <div class="drawer-stat"><div class="lbl">L4 OPS</div><div class="val">${formatStat(p.bat.opsL4)}</div></div>
+      <div class="drawer-stat"><div class="lbl">K %</div><div class="val">${Math.round(p.bat.k)}</div></div>
+    `;
+  }
+  document.getElementById('drawer-stats').innerHTML = statsHtml;
 
   document.getElementById('drawer-note').innerHTML = p.note || 'No notes yet.';
 
-  if (charts.drawer) charts.drawer.destroy();
-  charts.drawer = new Chart(document.getElementById('drawerChart'), {
-    type: 'line',
-    data: {
-      labels: ['Season', 'Last 8', 'Last 4'],
-      datasets: [{
-        label: 'OPS',
-        data: [p.bat.ops, p.bat.opsL8, p.bat.opsL4],
-        borderColor: COLOR.orange, backgroundColor: COLOR.orange + '30',
-        borderWidth: 3, tension: 0.35, pointRadius: 6,
-        pointBackgroundColor: COLOR.orange, pointBorderColor: COLOR.paper, pointBorderWidth: 2,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { backgroundColor: COLOR.ink, padding: 10, callbacks: { label: (c) => `OPS ${formatStat(c.parsed.y)}` } } },
-      scales: {
-        y: { grid: { color: COLOR.line }, ticks: { callback: (v) => formatStat(v), font: { family: 'Geist Mono', size: 11 } } },
-        x: { grid: { display: false }, ticks: { font: { family: 'Geist Mono', size: 11, weight: 700 } } }
+  // Trend chart — adjusts to the view
+  const trendSection = document.getElementById('drawer-trend-section');
+  const trendTitle = document.getElementById('drawer-trend-title');
+  if (charts.drawer) { charts.drawer.destroy(); charts.drawer = null; }
+
+  if (view === 'defense') {
+    // Defense data doesn't have meaningful rolling-window trends — hide chart
+    trendSection.style.display = 'none';
+  } else if (view === 'pitching') {
+    trendSection.style.display = '';
+    trendTitle.textContent = 'Trend (ERA by window)';
+    const eraSeason = p.pit.era || 0;
+    const eraL4 = p.pit.eraL4 || eraSeason;
+    charts.drawer = new Chart(document.getElementById('drawerChart'), {
+      type: 'line',
+      data: {
+        labels: ['Season', 'Last 4'],
+        datasets: [{
+          label: 'ERA',
+          data: [eraSeason, eraL4],
+          borderColor: COLOR.orange, backgroundColor: COLOR.orange + '30',
+          borderWidth: 3, tension: 0.35, pointRadius: 6,
+          pointBackgroundColor: COLOR.orange, pointBorderColor: COLOR.paper, pointBorderWidth: 2,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: COLOR.ink, padding: 10, callbacks: { label: (c) => `ERA ${formatNum(c.parsed.y, 2)}` } } },
+        scales: {
+          y: { reverse: true, grid: { color: COLOR.line }, ticks: { callback: (v) => formatNum(v, 2), font: { family: 'Geist Mono', size: 11 } } },
+          x: { grid: { display: false }, ticks: { font: { family: 'Geist Mono', size: 11, weight: 700 } } }
+        }
       }
-    }
-  });
+    });
+  } else {
+    trendSection.style.display = '';
+    trendTitle.textContent = 'Trend (OPS by window)';
+    charts.drawer = new Chart(document.getElementById('drawerChart'), {
+      type: 'line',
+      data: {
+        labels: ['Season', 'Last 8', 'Last 4'],
+        datasets: [{
+          label: 'OPS',
+          data: [p.bat.ops, p.bat.opsL8, p.bat.opsL4],
+          borderColor: COLOR.orange, backgroundColor: COLOR.orange + '30',
+          borderWidth: 3, tension: 0.35, pointRadius: 6,
+          pointBackgroundColor: COLOR.orange, pointBorderColor: COLOR.paper, pointBorderWidth: 2,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: COLOR.ink, padding: 10, callbacks: { label: (c) => `OPS ${formatStat(c.parsed.y)}` } } },
+        scales: {
+          y: { grid: { color: COLOR.line }, ticks: { callback: (v) => formatStat(v), font: { family: 'Geist Mono', size: 11 } } },
+          x: { grid: { display: false }, ticks: { font: { family: 'Geist Mono', size: 11, weight: 700 } } }
+        }
+      }
+    });
+  }
 
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawer-backdrop').classList.add('open');
@@ -5586,11 +5752,16 @@ document.getElementById('lineup-reset-btn').addEventListener('click', () => {
   }
 });
 
+// Track which top-level tab is currently active so the player drawer can show
+// stats relevant to that tab (batting, pitching, fielding).
+let currentMainTab = 'overview';
+
 document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     btn.classList.add('active');
+    currentMainTab = btn.dataset.tab;
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
     setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
   });
