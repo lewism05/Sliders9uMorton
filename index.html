@@ -108,67 +108,24 @@ body::before {
   margin-bottom: 4px;
 }
 
-.brand { display: flex; align-items: center; gap: 18px; }
+.brand { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
 
-.brand-mark {
-  width: 56px; height: 56px;
-  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-  border-radius: 14px;
-  display: grid; place-items: center;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 8px 24px -8px rgba(0,0,0,0.25);
-}
-.brand-mark::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(255,107,26,0.4), transparent 60%);
-  pointer-events: none;
-}
-.brand-mark::after {
-  content: '';
-  position: absolute; inset: 3px;
-  border: 1.5px solid rgba(255,107,26,0.6);
-  border-radius: 11px;
-}
-.brand-mark span {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 800;
-  background: linear-gradient(135deg, #ffae6e 0%, #ff6b1a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-size: 28px;
-  letter-spacing: -1px;
-  position: relative; z-index: 1; line-height: 1;
+.brand-logo {
+  display: block;
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
-.brand-text .eyebrow {
+.brand .eyebrow {
   font-family: 'Geist Mono', monospace;
   font-size: 11px;
   letter-spacing: 2.5px;
   color: var(--orange-deep);
   text-transform: uppercase;
   font-weight: 600;
-  margin-bottom: 6px;
-}
-.brand-text h1 {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 800;
-  font-size: 42px;
-  letter-spacing: -2px;
-  line-height: 0.95;
-  background: linear-gradient(135deg, #1a1a1a 0%, #444 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.brand-text h1 em {
-  font-style: normal;
-  background: var(--orange-grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 .meta-strip { text-align: right; }
@@ -944,10 +901,8 @@ body.viewer-mode .viewer-banner { display: flex; }
 @media (max-width: 768px) {
   .page { padding: 16px 12px 60px; }
   .masthead { padding-bottom: 16px; flex-wrap: wrap; gap: 12px; }
-  .brand-mark { width: 44px; height: 44px; }
-  .brand-mark span { font-size: 24px; }
-  .brand-text h1 { font-size: 30px; letter-spacing: -1.5px; }
-  .brand-text .eyebrow { font-size: 10px; letter-spacing: 1.5px; }
+  .brand-logo { max-width: 280px; }
+  .brand .eyebrow { font-size: 10px; letter-spacing: 1.5px; }
   .meta-strip .value { font-size: 20px; }
 
   .data-bar-summary { padding: 10px 12px; }
@@ -2337,11 +2292,8 @@ tr:hover td { background: rgba(255,255,255,0.45); cursor: pointer; }
   <!-- ============ MASTHEAD ============ -->
   <header class="masthead">
     <div class="brand">
-      <div class="brand-mark"><span>S</span></div>
-      <div class="brand-text">
-        <div class="eyebrow">Spring 2026 / 9U / Coach's Console</div>
-        <h1>Arkansas <em>Sliders</em></h1>
-      </div>
+      <div class="eyebrow">Spring 2026 / 9U / Coach's Console</div>
+      <img class="brand-logo" src="logo.png" alt="Arkansas Sliders" />
     </div>
     <div class="meta-strip">
       <div class="label">Games Played</div>
@@ -2452,7 +2404,7 @@ tr:hover td { background: rgba(255,255,255,0.45); cursor: pointer; }
     <div class="grid grid-asym">
       <div class="lineup-card">
         <div class="lineup-head">
-          <h2>Tonight's <em>Lineup</em></h2>
+          <h2>Suggested <em>Lineup</em></h2>
           <div class="why">Auto-Generated · Kid-Pitch · OBP-First</div>
         </div>
         <div class="lineup-list" id="lineup-overview"></div>
