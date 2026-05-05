@@ -293,6 +293,103 @@ body::before {
 .sync-pill .sync-icon.spin { animation: syncspin 1s linear infinite; display: inline-block; }
 @keyframes syncspin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 
+/* ========== MY PLAYER PILL + FILTER MODE ========== */
+.my-player-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0,0,0,0.06);
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.my-player-pill:hover { background: rgba(255,255,255,0.85); border-color: rgba(0,0,0,0.12); }
+.my-player-pill .mp-icon { font-size: 13px; line-height: 1; }
+.my-player-pill.active {
+  background: var(--orange-grad);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 10px -2px rgba(255,107,26,0.45);
+}
+
+.my-player-banner {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  margin: -8px -16px 16px -16px;
+  padding: 10px 18px;
+  background: var(--orange-grad);
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.2px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 4px 14px -4px rgba(255,107,26,0.45);
+  flex-wrap: wrap;
+}
+body.my-player-mode .my-player-banner { display: flex; }
+.mp-banner-text { color: #fff; }
+.mp-banner-clear {
+  background: rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.mp-banner-clear:hover { background: rgba(255,255,255,0.32); }
+
+/* When My Player mode is active, hide everyone but the chosen player in
+   stat tables, and dim/hide team-wide aggregations that aren't useful
+   for a single-player focus. The currently chosen player name is set
+   on body[data-my-player="..."] so we can use attribute selectors.
+   ---------------------------------------------------------------- */
+body.my-player-mode tbody tr[data-player] { display: none; }
+body.my-player-mode tbody tr.mp-show { display: table-row; }
+body.my-player-mode .player-row { display: none; }
+body.my-player-mode .player-row.mp-show { display: flex; }
+body.my-player-mode .tier-chip:not(.mp-show),
+body.my-player-mode .prospect-row:not(.mp-show) { opacity: 0.32; pointer-events: none; }
+
+/* Hide team-wide aggregation cards that don't make sense in single-player
+   view. We target by their containing card titles via id where present. */
+body.my-player-mode #practiceFocusCard,
+body.my-player-mode #teamTrendChart,
+body.my-player-mode #opsBarChart,
+body.my-player-mode #obpSlgChart,
+body.my-player-mode #walksChart,
+body.my-player-mode #fieldingChart,
+body.my-player-mode .insight-card,
+body.my-player-mode #pitcher-tiers .tier-block:not(.prospect-block),
+body.my-player-mode #playing-time-card .pt-concerns { display: none; }
+
+body.my-player-mode .lineup-row[data-player] { opacity: 0.35; transition: opacity 0.2s ease; }
+body.my-player-mode .lineup-row.mp-show {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--orange) inset;
+  border-radius: 6px;
+}
+
 .sync-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.4);
@@ -569,7 +666,7 @@ body.viewer-mode .lineup-row .lineup-edit-icon { display: none !important; }
 body.viewer-mode .lineup-controls .reset-btn,
 body.viewer-mode .lineup-controls .edit-hint { display: none !important; }
 body.viewer-mode .game-strength { pointer-events: none; opacity: 0.65; }
-body.viewer-mode .picker-overlay { display: none !important; }
+body.viewer-mode .picker-overlay#picker-overlay { display: none !important; }
 body.viewer-mode .data-bar-summary { padding: 14px 20px; }
 body.viewer-mode .data-status { font-size: 12px; }
 
@@ -1343,6 +1440,50 @@ body.viewer-mode .viewer-banner { display: flex; }
   font-weight: 600;
 }
 
+/* ========== TOURNAMENT / MULTI-GAME DAY ========== */
+.tournament-day {
+  position: relative;
+  margin-bottom: 14px;
+  padding: 14px 14px 4px 14px;
+  background: linear-gradient(135deg, rgba(255,180,80,0.08), rgba(255,107,26,0.02));
+  border: 1px dashed rgba(255,107,26,0.35);
+  border-radius: 14px;
+}
+.tournament-day-head { margin-bottom: 12px; padding-left: 4px; }
+.tournament-day-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+.tournament-day-icon { font-size: 17px; }
+.tournament-day-tag {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--orange-deep);
+  background: rgba(255,107,26,0.12);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  margin-left: 4px;
+}
+.tournament-day-sub {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  letter-spacing: 0.8px;
+  margin-top: 4px;
+  padding-left: 25px;
+}
+.tournament-day-games .game-card { margin-bottom: 8px; }
+.tournament-day-games .game-card:last-child { margin-bottom: 0; }
+
 .game-card {
   background: var(--paper);
   backdrop-filter: var(--blur);
@@ -1431,6 +1572,47 @@ body.viewer-mode .viewer-banner { display: flex; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ========== GAME WEATHER FORECAST ========== */
+.game-weather {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 6px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--ink-soft);
+  min-height: 14px;
+}
+.game-weather:empty { display: none; }
+.game-weather .gw-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+.game-weather .gw-temp {
+  color: var(--ink);
+  font-weight: 800;
+}
+.game-weather .gw-precip,
+.game-weather .gw-wind {
+  color: var(--ink-mute);
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.game-weather .gw-alert {
+  color: var(--orange-deep);
+  background: rgba(255,107,26,0.10);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 9.5px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
 }
 
 .game-meta {
@@ -2113,6 +2295,80 @@ table tbody tr:hover td:first-child {
   color: var(--ink-soft);
 }
 
+/* ========== PLAYING TIME (Defense tab) ========== */
+.pt-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.pt-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+}
+.pt-table th {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  font-weight: 700;
+  padding: 10px 8px;
+  background: rgba(255,255,255,0.5);
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+}
+.pt-table th.pt-name-col { text-align: left; padding-left: 14px; }
+.pt-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: right;
+  font-weight: 600;
+}
+.pt-table td.player {
+  text-align: left;
+  padding-left: 14px;
+  cursor: pointer;
+}
+.pt-table tr[data-player] { transition: background 0.12s ease; cursor: pointer; }
+.pt-table tr[data-player]:hover td { background: rgba(255,107,26,0.06); }
+.pt-table tr[data-player]:hover td.pt-cell { background: rgba(255,107,26,0.18); }
+.pt-cell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.pt-zero { color: var(--ink-mute); font-weight: 400; }
+.pt-total {
+  background: rgba(0,0,0,0.04);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.pt-concerns {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(255,180,80,0.10), rgba(255,107,26,0.03));
+  border: 1px solid rgba(255,107,26,0.18);
+  border-radius: 10px;
+}
+.pt-concerns-head {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--orange-deep);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.pt-concern {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  padding: 4px 0;
+}
+@media (max-width: 600px) {
+  .pt-table { font-size: 11px; }
+  .pt-table th, .pt-table td { padding: 8px 5px; }
+}
+
 /* ========== WORTH A LOOK (prospective pitchers) ========== */
 .prospect-block {
   margin-top: 22px;
@@ -2343,6 +2599,48 @@ table tbody tr:hover td:first-child {
 }
 .drawer-section p { font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
 
+/* ========== ACHIEVEMENTS (drawer) ========== */
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+.achievement-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  background: linear-gradient(135deg, rgba(255,180,80,0.14), rgba(255,107,26,0.04));
+  border: 1px solid rgba(255,107,26,0.2);
+  border-radius: 10px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.achievement-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(255,107,26,0.25);
+}
+.achievement-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+}
+.achievement-text { min-width: 0; flex: 1; }
+.achievement-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 12.5px;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+.achievement-sub {
+  font-size: 11px;
+  color: var(--ink-mute);
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
 /* ========== IMPROVEMENT PLAN (drawer) ========== */
 .improve-issue {
   background: linear-gradient(135deg, rgba(255,107,26,0.08), rgba(255,107,26,0.02));
@@ -2540,6 +2838,158 @@ table tbody tr:hover td:first-child {
 }
 .coach-note strong { color: var(--orange-deep); }
 
+/* ========== GAME DAY PREP CHECKLISTS ========== */
+.prep-card {
+  position: relative;
+  margin-top: 24px;
+  padding: 22px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,247,235,0.6));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 20px -8px rgba(0,0,0,0.05);
+}
+.prep-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.prep-head h2 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: -1px;
+  color: var(--ink);
+  margin: 0;
+}
+.prep-head h2 em {
+  background: var(--orange-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-style: normal;
+}
+.prep-sub {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-top: 4px;
+}
+.prep-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(0,0,0,0.05);
+  padding: 3px;
+  border-radius: 999px;
+}
+.prep-tab-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.prep-tab-btn.active {
+  background: var(--orange-grad);
+  color: #fff;
+  box-shadow: 0 2px 8px -2px rgba(255,107,26,0.4);
+}
+.prep-group {
+  margin-bottom: 18px;
+}
+.prep-group:last-child { margin-bottom: 0; }
+.prep-group-title {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  color: var(--orange-deep);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.prep-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 4px;
+}
+.prep-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  user-select: none;
+}
+.prep-item:hover { background: rgba(255,107,26,0.06); }
+.prep-check {
+  width: 20px; height: 20px;
+  border: 1.5px solid var(--line);
+  border-radius: 5px;
+  display: grid; place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(255,255,255,0.5);
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.prep-item.checked .prep-check {
+  background: var(--orange-grad);
+  border-color: transparent;
+}
+.prep-item-text {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.prep-item.checked .prep-item-text {
+  color: var(--ink-mute);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+.prep-reset-btn {
+  margin-top: 14px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.6);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.prep-reset-btn:hover {
+  border-color: var(--orange);
+  color: var(--orange-deep);
+}
+@media (max-width: 600px) {
+  .prep-head h2 { font-size: 19px; }
+  .prep-toggle { width: 100%; }
+  .prep-tab-btn { flex: 1; padding: 6px 8px; }
+  .prep-items { grid-template-columns: 1fr; }
+}
+
 /* ========== SECTION HEADINGS ========== */
 .section-head {
   display: flex;
@@ -2621,6 +3071,10 @@ table tbody tr:hover td:first-child {
         <span id="dataStatusText">No data loaded — upload your CSVs to begin</span>
       </div>
       <div class="data-actions">
+        <button class="my-player-pill" id="myPlayerPill" title="Filter dashboard to one player">
+          <span class="mp-icon">👤</span>
+          <span class="mp-label" id="mpLabel">All Team</span>
+        </button>
         <button class="sync-pill" id="syncPill" title="Cross-device sync"><span class="sync-icon">🔌</span><span class="sync-label">Sync off</span></button>
         <button class="btn btn-secondary" id="exportBtn" title="Export all data to a file">Export</button>
         <button class="btn btn-secondary" id="importBtn" title="Import data from a file">Import</button>
@@ -2777,6 +3231,22 @@ table tbody tr:hover td:first-child {
 
     <!-- Practice Focus — auto-generated coaching priorities -->
     <div class="practice-focus-card" id="practiceFocusCard"></div>
+
+    <!-- Game Day Prep — checklists for parents/players -->
+    <div class="prep-card" id="prepCard">
+      <div class="prep-head">
+        <div>
+          <h2>Game Day <em>Prep</em></h2>
+          <div class="prep-sub">For players + parents · Tap to check off</div>
+        </div>
+        <div class="prep-toggle">
+          <button class="prep-tab-btn active" data-mode="game">Standard Game</button>
+          <button class="prep-tab-btn" data-mode="tournament">Tournament Day</button>
+        </div>
+      </div>
+      <div id="prepBody"></div>
+      <button class="prep-reset-btn" id="prepResetBtn">↺ Uncheck all</button>
+    </div>
 
   </section>
 
@@ -2955,6 +3425,15 @@ table tbody tr:hover td:first-child {
     <div class="card">
       <div class="chart-box"><canvas id="fieldingChart"></canvas></div>
     </div>
+
+    <div class="section-head" style="margin-top: 32px;">
+      <h2>Playing Time <em>by Position</em></h2>
+      <div class="card-subtitle">Innings per spot · Spot rotation gaps</div>
+    </div>
+
+    <div class="card">
+      <div id="playing-time-card"></div>
+    </div>
   </section>
 
   <!-- ============ LINEUP BUILDER ============ -->
@@ -3061,6 +3540,10 @@ table tbody tr:hover td:first-child {
   <h2 id="drawer-name">Player Name</h2>
   <div class="drawer-sub" id="drawer-role">Role · Tier</div>
   <div class="drawer-stats" id="drawer-stats"></div>
+  <div class="drawer-section" id="drawer-achievements-section">
+    <h3>🏆 Achievements</h3>
+    <div class="achievement-grid" id="drawer-achievements"></div>
+  </div>
   <div class="drawer-section" id="drawer-trend-section">
     <h3 id="drawer-trend-title">Trend (OPS by window)</h3>
     <div class="chart-box" style="height: 180px;"><canvas id="drawerChart"></canvas></div>
@@ -3087,6 +3570,28 @@ table tbody tr:hover td:first-child {
     </div>
     <div class="picker-body" id="picker-body"></div>
   </div>
+</div>
+
+<!-- ============ MY PLAYER PICKER ============ -->
+<div class="picker-overlay" id="my-player-overlay">
+  <div class="picker-sheet">
+    <div class="picker-header">
+      <div>
+        <h3>My Player</h3>
+        <div class="picker-sub">Focus the dashboard on one kid</div>
+      </div>
+      <button class="picker-close" id="my-player-close">×</button>
+    </div>
+    <div class="picker-body" id="my-player-body"></div>
+  </div>
+</div>
+
+<!-- Filter banner shown when My Player mode is active -->
+<div class="my-player-banner" id="myPlayerBanner">
+  <div class="mp-banner-text">
+    Showing <strong id="mpBannerName">—</strong> only
+  </div>
+  <button class="mp-banner-clear" id="mpBannerClear">Show full team ×</button>
 </div>
 
 <script>
@@ -3403,6 +3908,104 @@ const DRILLS = {
     }
   ]
 };
+
+
+/* ============================================================
+   detectAchievements(player, allPlayers)
+
+   Auto-detects season milestones from existing stats. Returns an
+   array of { icon, title, sub } objects.
+
+   Achievements are derived purely from cumulative stats — no
+   per-game tracking needed. Designed for kids and parents to feel
+   recognition for progress, especially players who aren't
+   numerically the "best" but who excel in specific areas.
+   ============================================================ */
+function detectAchievements(player, allPlayers) {
+  const ach = [];
+  if (!player) return ach;
+  const b = player.bat || {};
+  const pi = player.pit || {};
+  const f = player.field || {};
+  const teamPlayers = allPlayers || [];
+
+  // ---------- BATTING ----------
+  if (b.ops > 0) ach.push({ icon: '⚾', title: 'On the board', sub: 'Reached base this season' });
+
+  if (b.ops >= 1.500) ach.push({ icon: '🚀', title: '1.500 OPS Club', sub: 'Elite production' });
+  else if (b.ops >= 1.200) ach.push({ icon: '🔥', title: '1.200 OPS', sub: 'Crushing the ball' });
+  else if (b.ops >= 1.000) ach.push({ icon: '💥', title: 'Quadruple-digit OPS', sub: '1.000+ this season' });
+  else if (b.ops >= 0.800) ach.push({ icon: '✨', title: '.800 OPS', sub: 'Above-average producer' });
+
+  if (b.obp >= 0.600) ach.push({ icon: '🧲', title: 'On-base machine', sub: `${formatStat(b.obp)} OBP — gets on 60%+ of trips` });
+  else if (b.obp >= 0.450) ach.push({ icon: '🎯', title: 'Plate disciplined', sub: `${formatStat(b.obp)} OBP` });
+
+  if (b.slg >= 0.700) ach.push({ icon: '💣', title: 'Power threat', sub: `${formatStat(b.slg)} SLG — extra-base damage` });
+  else if (b.slg >= 0.500) ach.push({ icon: '💪', title: 'Drives the ball', sub: `${formatStat(b.slg)} SLG` });
+
+  if (b.k != null && b.k > 0 && b.k <= 8 && (b.ops > 0)) ach.push({ icon: '🪄', title: 'Bat-to-ball wizard', sub: `${Math.round(b.k)}% strikeout rate` });
+  else if (b.k != null && b.k <= 15 && b.ops > 0) ach.push({ icon: '👁️', title: 'Elite contact', sub: `${Math.round(b.k)}% K-rate` });
+
+  if (b.opsL4 != null && b.ops > 0 && (b.opsL4 - b.ops) >= 0.250) {
+    ach.push({ icon: '📈', title: 'Heating up', sub: `Last 4 OPS ${formatStat(b.opsL4)} (+${formatStat(b.opsL4 - b.ops)})` });
+  }
+
+  // Team superlatives
+  const batters = teamPlayers.filter(t => (t.bat?.ops || 0) > 0);
+  if (batters.length > 1) {
+    const topOPS = Math.max(...batters.map(t => t.bat.ops));
+    if (b.ops > 0 && Math.abs(b.ops - topOPS) < 0.001) ach.push({ icon: '👑', title: 'Team OPS leader', sub: 'Best on the Sliders' });
+    const topOBP = Math.max(...batters.map(t => t.bat.obp));
+    if (b.obp > 0 && Math.abs(b.obp - topOBP) < 0.001 && (b.ops < topOPS - 0.001)) ach.push({ icon: '🥇', title: 'Team OBP leader', sub: 'Highest on-base on the team' });
+  }
+
+  // ---------- PITCHING ----------
+  if (pi.ip > 0) ach.push({ icon: '🥎', title: 'Took the mound', sub: `${formatNum(pi.ip,1)} innings pitched` });
+
+  if (pi.ip >= 15) ach.push({ icon: '🐎', title: 'Workhorse', sub: `${formatNum(pi.ip,1)} IP — ate big innings` });
+  else if (pi.ip >= 8) ach.push({ icon: '💼', title: 'Reliable arm', sub: `${formatNum(pi.ip,1)} IP this season` });
+
+  if (pi.bbip != null && pi.bbip > 0 && pi.bbip <= 0.5 && pi.ip >= 3) {
+    ach.push({ icon: '🎯', title: 'Strike artist', sub: `${formatNum(pi.bbip,2)} BB/IP — barely walks anyone` });
+  } else if (pi.bbip != null && pi.bbip <= 1.0 && pi.ip >= 3) {
+    ach.push({ icon: '✅', title: 'Strike-thrower', sub: `${formatNum(pi.bbip,2)} BB/IP` });
+  }
+
+  if (pi.kip != null && pi.kip >= 2.5 && pi.ip >= 2) {
+    ach.push({ icon: '🔥', title: 'Strikeout pitcher', sub: `${formatNum(pi.kip,2)} K/IP — misses bats` });
+  }
+
+  if (pi.strike != null && pi.strike >= 65 && pi.ip >= 3) {
+    ach.push({ icon: '🎪', title: '65%+ strikes', sub: `${Math.round(pi.strike)}% strike rate — pounds the zone` });
+  }
+
+  if (pi.era != null && pi.era > 0 && pi.era < 4.0 && pi.ip >= 5) {
+    ach.push({ icon: '🛡️', title: 'Sub-4.00 ERA', sub: `${formatNum(pi.era,2)} ERA — keeps runs off the board` });
+  }
+
+  // ---------- FIELDING ----------
+  if (f.chances >= 5 && f.errPct === 0) {
+    ach.push({ icon: '🧤', title: 'Errorless season', sub: `${f.chances} chances, zero errors` });
+  } else if (f.chances >= 10 && f.errPct < 5) {
+    ach.push({ icon: '🛟', title: 'Reliable glove', sub: `${formatNum(f.fpct,3)} fielding %` });
+  }
+
+  // Versatility — capture multi-position kids
+  const innings = f.positionInnings || {};
+  const positionsPlayed = Object.keys(innings).filter(k => innings[k] >= 1).length;
+  if (positionsPlayed >= 4) {
+    ach.push({ icon: '🦎', title: 'Swiss Army glove', sub: `Played ${positionsPlayed} positions this season` });
+  } else if (positionsPlayed >= 3) {
+    ach.push({ icon: '🔄', title: 'Versatile', sub: `${positionsPlayed} positions played` });
+  }
+
+  // Catcher gear-grinder
+  if ((innings.C || 0) >= 20) {
+    ach.push({ icon: '⛓️', title: 'Catcher of duty', sub: `${formatNum(innings.C,1)} innings behind the dish` });
+  }
+
+  return ach;
+}
 
 
 /* ============================================================
@@ -4405,30 +5008,29 @@ function extractFieldingStats(row, headers) {
   };
 
   // Try to find an explicit POS column; otherwise derive primary position from
-  // innings played at each spot (typical of GameChanger exports).
+  // innings played at each spot (typical of GameChanger exports). We also
+  // capture innings at every position for the playing-time tracker.
   const posCol = findCol(headers, 'position', 'fielding');
   let pos = posCol ? (row[posCol] || '').trim() : '';
-  if (!pos) {
-    const positions = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'SF'];
-    let maxInn = 0, primary = '';
-    for (const p of positions) {
-      // Look for "fielding.P", "fielding.C" etc.
-      const target = `fielding.${p}`.toLowerCase();
-      const idx = headers.findIndex(h => (h || '').toLowerCase() === target);
-      if (idx >= 0) {
-        const val = num(row[headers[idx]]);
-        if (val != null && val > maxInn) { maxInn = val; primary = p; }
-      } else {
-        // Unprefixed fallback (when no section row was present)
-        const idxRaw = headers.findIndex(h => (h || '').toUpperCase() === p);
-        if (idxRaw >= 0) {
-          const val = num(row[headers[idxRaw]]);
-          if (val != null && val > maxInn) { maxInn = val; primary = p; }
-        }
-      }
+  const positions = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'SF'];
+  const positionInnings = {};
+  let maxInn = 0, primary = '';
+  for (const p of positions) {
+    const target = `fielding.${p}`.toLowerCase();
+    const idx = headers.findIndex(h => (h || '').toLowerCase() === target);
+    let val = null;
+    if (idx >= 0) {
+      val = num(row[headers[idx]]);
+    } else {
+      const idxRaw = headers.findIndex(h => (h || '').toUpperCase() === p);
+      if (idxRaw >= 0) val = num(row[headers[idxRaw]]);
     }
-    pos = primary;
+    if (val != null) {
+      positionInnings[p] = val;
+      if (val > maxInn) { maxInn = val; primary = p; }
+    }
   }
+  if (!pos) pos = primary;
 
   let fpct = get('fpct');
   if (fpct != null && fpct > 1.5) fpct = fpct / 1000;
@@ -4439,7 +5041,9 @@ function extractFieldingStats(row, headers) {
   return {
     errors, chances, fpct: fpct ?? 0,
     errPct: Math.round(errPct * 10) / 10,
-    position: pos || ''
+    position: pos || '',
+    positionInnings,
+    totalInnings: Object.values(positionInnings).reduce((s, v) => s + v, 0)
   };
 }
 
@@ -5334,13 +5938,47 @@ function renderMatchups() {
     const [y, m] = monthKey.split('-');
     const monthName = MONTH_NAMES[parseInt(m) - 1];
     const games = byMonth[monthKey];
+
+    // Group games within the month by exact date so 2+ games on the same
+    // day render as a "tournament day" / "double-header" container.
+    const byDate = {};
+    games.forEach(g => {
+      if (!byDate[g.date]) byDate[g.date] = [];
+      byDate[g.date].push(g);
+    });
+
+    const dateBlocks = Object.keys(byDate).sort().map(date => {
+      const dayGames = byDate[date];
+      if (dayGames.length === 1) {
+        return renderGameCard(dayGames[0]);
+      }
+      // Multi-game day → wrap in a tournament-day container
+      const dayLabel = dayGames[0].day;
+      const dateNum = parseInt(date.split('-')[2], 10);
+      return `
+        <div class="tournament-day">
+          <div class="tournament-day-head">
+            <div class="tournament-day-title">
+              <span class="tournament-day-icon">🏆</span>
+              ${dayLabel}, ${monthName} ${dateNum}
+              <span class="tournament-day-tag">${dayGames.length}-game day</span>
+            </div>
+            <div class="tournament-day-sub">Plan pitcher workload across all ${dayGames.length} games</div>
+          </div>
+          <div class="tournament-day-games">
+            ${dayGames.map(g => renderGameCard(g)).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
     html += `
       <div class="matchup-month">
         <div class="matchup-month-title">
           ${monthName} ${y}
           <span class="month-meta">${games.length} game${games.length>1?'s':''}</span>
         </div>
-        ${games.map(g => renderGameCard(g)).join('')}
+        ${dateBlocks}
       </div>
     `;
   });
@@ -5392,7 +6030,158 @@ function renderMatchups() {
       }
     });
   });
+
+  // Populate weather forecasts for upcoming games (async, no blocking)
+  fetchAndRenderWeather();
 }
+
+
+/* ============================================================
+   WEATHER FORECAST (Open-Meteo, no API key required)
+
+   For every upcoming game card with a .game-weather slot, fetch
+   the daily forecast (max/min temp, precip %, wind, weather code)
+   and render a compact strip. Uses browser geolocation (with
+   user permission); falls back to Fayetteville, AR coordinates
+   for Northwest Arkansas — covers all the user's listed fields.
+
+   The forecast horizon is 14 days. Open-Meteo is free, requires
+   no key, has generous rate limits, and is widely used.
+   ============================================================ */
+const WEATHER_FALLBACK = { lat: 36.0626, lng: -94.1574, label: 'Fayetteville, AR' };
+const WEATHER_CACHE_KEY = 'sliders_weather_v1';
+const WEATHER_CACHE_TTL = 1000 * 60 * 60 * 3; // 3 hours
+
+let weatherLocation = null;
+
+function getWeatherLocation() {
+  return new Promise(resolve => {
+    if (weatherLocation) return resolve(weatherLocation);
+    if (!navigator.geolocation) return resolve(WEATHER_FALLBACK);
+
+    let resolved = false;
+    const timeout = setTimeout(() => {
+      if (!resolved) { resolved = true; resolve(WEATHER_FALLBACK); }
+    }, 4000);
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(timeout);
+        weatherLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude, label: 'Your location' };
+        resolve(weatherLocation);
+      },
+      () => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(timeout);
+        weatherLocation = WEATHER_FALLBACK;
+        resolve(WEATHER_FALLBACK);
+      },
+      { timeout: 3500, maximumAge: 1000 * 60 * 30 }
+    );
+  });
+}
+
+function weatherIcon(code) {
+  // WMO weather codes — Open-Meteo standard
+  if (code === 0) return '☀️';
+  if (code <= 2) return '🌤️';
+  if (code === 3) return '☁️';
+  if (code >= 45 && code <= 48) return '🌫️';
+  if (code >= 51 && code <= 67) return '🌧️';
+  if (code >= 71 && code <= 77) return '❄️';
+  if (code >= 80 && code <= 82) return '🌦️';
+  if (code >= 95) return '⛈️';
+  return '🌡️';
+}
+
+function weatherLabel(code) {
+  if (code === 0) return 'Clear';
+  if (code <= 2) return 'Mostly sunny';
+  if (code === 3) return 'Overcast';
+  if (code >= 45 && code <= 48) return 'Foggy';
+  if (code >= 51 && code <= 57) return 'Drizzle';
+  if (code >= 61 && code <= 67) return 'Rain';
+  if (code >= 71 && code <= 77) return 'Snow';
+  if (code >= 80 && code <= 82) return 'Showers';
+  if (code >= 95) return 'Thunderstorms';
+  return '';
+}
+
+async function fetchAndRenderWeather() {
+  const slots = document.querySelectorAll('.game-weather:not([data-loaded])');
+  if (slots.length === 0) return;
+
+  // Get the date range we need to forecast
+  const dates = [...new Set([...slots].map(s => s.dataset.date))].sort();
+  if (dates.length === 0) return;
+  const startDate = dates[0];
+  const endDate = dates[dates.length - 1];
+
+  // Check cache (per-location forecasts last 3 hours)
+  let cached = null;
+  try {
+    const raw = localStorage.getItem(WEATHER_CACHE_KEY);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (obj.startDate === startDate && obj.endDate === endDate && (Date.now() - obj.fetchedAt) < WEATHER_CACHE_TTL) {
+        cached = obj.data;
+      }
+    }
+  } catch {}
+
+  let data = cached;
+  if (!data) {
+    const loc = await getWeatherLocation();
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lng}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&start_date=${startDate}&end_date=${endDate}`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return;
+      data = await res.json();
+      try {
+        localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({
+          startDate, endDate, fetchedAt: Date.now(), data
+        }));
+      } catch {}
+    } catch (e) {
+      // Network failure — leave slots empty rather than showing an error
+      return;
+    }
+  }
+
+  if (!data || !data.daily || !data.daily.time) return;
+
+  // Build a date → forecast lookup
+  const byDate = {};
+  for (let i = 0; i < data.daily.time.length; i++) {
+    byDate[data.daily.time[i]] = {
+      tmax: data.daily.temperature_2m_max[i],
+      tmin: data.daily.temperature_2m_min[i],
+      precip: data.daily.precipitation_probability_max[i],
+      wind: data.daily.wind_speed_10m_max[i],
+      code: data.daily.weather_code[i]
+    };
+  }
+
+  slots.forEach(slot => {
+    const d = byDate[slot.dataset.date];
+    if (!d) return;
+    const heatIndex = d.tmax >= 95 ? '🔥 Hot — extra hydration' : (d.tmax <= 50 ? '🧥 Bring a jacket' : '');
+    const rainAlert = d.precip >= 60 ? '☔ Likely rain' : (d.precip >= 30 ? 'Could see showers' : '');
+    const alert = heatIndex || rainAlert;
+    slot.innerHTML = `
+      <span class="gw-icon">${weatherIcon(d.code)}</span>
+      <span class="gw-temp">${Math.round(d.tmax)}° / ${Math.round(d.tmin)}°</span>
+      <span class="gw-precip">${Math.round(d.precip || 0)}% rain</span>
+      <span class="gw-wind">${Math.round(d.wind || 0)} mph wind</span>
+      ${alert ? `<span class="gw-alert">${alert}</span>` : ''}
+    `;
+    slot.setAttribute('data-loaded', 'true');
+  });
+}
+
 
 function renderGameCard(g) {
   const day = g.day.toUpperCase().slice(0, 3);
@@ -5409,6 +6198,14 @@ function renderGameCard(g) {
   if (dayDiff === 0) badge = '<span class="game-result-badge next">TODAY</span>';
   else if (dayDiff > 0 && dayDiff <= 7) badge = '<span class="game-result-badge upcoming">SOON</span>';
 
+  // Game weather slot — populated async by fetchAndRenderWeather() after
+  // the cards are in the DOM. Shown only for games within the forecast
+  // horizon (≤ 14 days out).
+  const showWeatherSlot = dayDiff >= 0 && dayDiff <= 14;
+  const weatherSlot = showWeatherSlot
+    ? `<div class="game-weather" data-game-id="${g.id}" data-date="${g.date}"></div>`
+    : '';
+
   return `
     <div class="game-card ${isExpanded ? 'expanded' : ''}" data-id="${g.id}" data-idx="${g.idx}">
       <div class="game-card-header">
@@ -5421,6 +6218,7 @@ function renderGameCard(g) {
             <span class="vs-prefix">${g.away ? '@' : 'vs.'}</span>${g.opponent}${badge}
           </div>
           <div class="game-loc">${g.location || 'Location TBD'}${g.time ? ' · ' + g.time : ''}</div>
+          ${weatherSlot}
         </div>
         <div class="game-meta">
           <select class="game-strength strength-${scenario}" data-id="${g.id}" data-idx="${g.idx}">
@@ -6465,6 +7263,25 @@ function openDrawer(playerName) {
   // parent/coach is on (batting tab → batting drills, etc.)
   const issues = detectPlayerIssues(p, view);
   const drills = drillsForIssues(issues, 1);
+
+  // ========== Achievements ==========
+  const achievements = detectAchievements(p, PLAYERS);
+  const achEl = document.getElementById('drawer-achievements');
+  const achSection = document.getElementById('drawer-achievements-section');
+  if (achievements.length === 0) {
+    achSection.style.display = 'none';
+  } else {
+    achSection.style.display = '';
+    achEl.innerHTML = achievements.map(a => `
+      <div class="achievement-badge">
+        <div class="achievement-icon">${a.icon}</div>
+        <div class="achievement-text">
+          <div class="achievement-title">${a.title}</div>
+          <div class="achievement-sub">${a.sub}</div>
+        </div>
+      </div>
+    `).join('');
+  }
   const planEl = document.getElementById('drawer-improvement-body');
   const planTitle = document.getElementById('drawer-improvement-title');
   if (planTitle) {
@@ -6701,6 +7518,396 @@ function renderPracticeFocus(players) {
   `;
 }
 
+
+/* ============================================================
+   PLAYING TIME / POSITION ROTATION
+
+   Displays innings-per-position grid + flags pigeonholing risk
+   (e.g., a kid who's caught 90% of his innings may be limiting
+   his all-around development at 9U). Also surfaces players who
+   need more reps at the up-the-middle spots.
+   ============================================================ */
+function renderPlayingTime(players) {
+  const el = document.getElementById('playing-time-card');
+  if (!el) return;
+
+  const fielders = players.filter(p => p.field && (p.field.totalInnings > 0));
+  if (fielders.length === 0) {
+    el.innerHTML = '<div class="empty-state">Upload fielding CSV to see playing-time breakdown.</div>';
+    return;
+  }
+
+  const positions = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF'];
+  // Find max innings at any single position for color scaling
+  let maxAny = 0;
+  fielders.forEach(p => {
+    Object.values(p.field.positionInnings || {}).forEach(v => {
+      if (v > maxAny) maxAny = v;
+    });
+  });
+
+  // Sort by total innings desc
+  const sorted = [...fielders].sort((a, b) => (b.field.totalInnings || 0) - (a.field.totalInnings || 0));
+
+  // Headcount per position (for spot-rotation gap card below)
+  const distribution = {};
+  positions.forEach(pos => {
+    distribution[pos] = fielders.filter(p => (p.field.positionInnings?.[pos] || 0) >= 1).length;
+  });
+
+  // Detect concerns: pigeonholed kids (95%+ at one spot, 5+ innings)
+  const concerns = [];
+  fielders.forEach(p => {
+    const total = p.field.totalInnings || 0;
+    if (total < 5) return;
+    const inns = p.field.positionInnings || {};
+    const top = Math.max(...Object.values(inns));
+    const topPos = Object.keys(inns).find(k => inns[k] === top);
+    if (top / total >= 0.95 && total >= 8) {
+      concerns.push({
+        type: 'pigeonhole',
+        player: p,
+        msg: `${p.name} has played ${formatNum(top,1)} of ${formatNum(total,1)} innings at ${topPos} (${Math.round(top/total*100)}%). Get him reps at other spots for development.`
+      });
+    }
+  });
+
+  // Position coverage gaps — fewer than 3 kids at any position is thin
+  const thinSpots = positions.filter(pos => distribution[pos] < 3 && distribution[pos] > 0);
+
+  const tableHtml = `
+    <div class="pt-table-wrap">
+      <table class="pt-table">
+        <thead>
+          <tr>
+            <th class="pt-name-col">Player</th>
+            ${positions.map(p => `<th class="num">${p}</th>`).join('')}
+            <th class="num">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map(p => {
+            const inns = p.field.positionInnings || {};
+            return `
+              <tr data-player="${p.name}">
+                <td class="player"><div class="player-cell"><div class="player-avatar tier-${p.tier}">${p.short[0]}</div>${p.name}</div></td>
+                ${positions.map(pos => {
+                  const v = inns[pos] || 0;
+                  if (v === 0) return '<td class="num pt-cell pt-zero">–</td>';
+                  const intensity = maxAny > 0 ? Math.min(1, v / maxAny) : 0;
+                  return `<td class="num pt-cell" style="background:rgba(255,107,26,${intensity * 0.55});">${formatNum(v,1)}</td>`;
+                }).join('')}
+                <td class="num pt-total">${formatNum(p.field.totalInnings,1)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  const concernsHtml = concerns.length > 0 ? `
+    <div class="pt-concerns">
+      <div class="pt-concerns-head">Rotation Notes</div>
+      ${concerns.map(c => `<div class="pt-concern">⚠️ ${c.msg}</div>`).join('')}
+    </div>
+  ` : '';
+
+  const thinHtml = thinSpots.length > 0 ? `
+    <div class="pt-concerns" style="margin-top:10px;">
+      <div class="pt-concerns-head">Thin Coverage</div>
+      <div class="pt-concern">📍 Only ${thinSpots.map(p => `${distribution[p]} kid${distribution[p]===1?'':'s'} at ${p}`).join(', ')} this season. Consider giving more players a look — injury or absence could leave you short.</div>
+    </div>
+  ` : '';
+
+  el.innerHTML = tableHtml + concernsHtml + thinHtml;
+
+  // Wire row clicks to drawer
+  el.querySelectorAll('tr[data-player]').forEach(tr => {
+    tr.addEventListener('click', () => openDrawer(tr.dataset.player));
+  });
+}
+
+
+/* ============================================================
+   GAME DAY PREP — equipment checklists for parents + players
+
+   Two preset lists: standard game-day vs. multi-game tournament
+   weekend. Checked state is stored per-device in localStorage so
+   each parent's progress survives a refresh. List resets are
+   manual (so a half-checked list doesn't disappear on someone
+   coming back later in the day).
+   ============================================================ */
+const CHECKLISTS = {
+  game: [
+    { cat: 'Player Gear', items: [
+      'Glove',
+      'Bat (USA-stamped for 9U)',
+      'Helmet',
+      'Cleats + alternate sneakers',
+      'Hat',
+      'Belt',
+      'Baseball pants',
+      'Jersey',
+      'Long socks / sliders',
+      'Athletic cup'
+    ]},
+    { cat: 'Hydration & Snacks', items: [
+      'Water bottle (filled, ice if hot)',
+      'Healthy snack — protein bar, banana, jerky',
+      'Sunflower seeds / gum if your kid likes them',
+      'Sports drink for hot days'
+    ]},
+    { cat: 'Weather', items: [
+      'Sunscreen (apply before leaving)',
+      'Sunglasses for the sun side',
+      'Light jacket (early-spring / late-evening games)',
+      'Rain poncho (just in case)'
+    ]},
+    { cat: 'Family Comfort', items: [
+      'Folding chair / stadium seat',
+      'Phone fully charged',
+      'Cash for concessions',
+      'Bug spray (twilight games)'
+    ]}
+  ],
+  tournament: [
+    { cat: 'Player Gear (pack 2 of)', items: [
+      'Two clean uniforms (games run back-to-back)',
+      'Two pairs of baseball pants',
+      'Two pairs of socks',
+      'Backup batting gloves',
+      'Backup hat',
+      'Glove — game + a beat-up backup',
+      'Cleats + turf shoes',
+      'Athletic cup'
+    ]},
+    { cat: 'Stay Hydrated, Stay Fueled', items: [
+      'Cooler with ice + water bottles',
+      'Gatorade / electrolyte drinks',
+      'Sandwiches / wraps for between games',
+      'Protein bars + fruit',
+      'Cash or card for ballpark food'
+    ]},
+    { cat: 'Weather Survival', items: [
+      'Spray-on sunscreen (re-apply each game)',
+      'Wide-brimmed hat or visor',
+      'Layered clothing — temps swing 30°+ in a day',
+      'Rain gear: poncho + umbrella',
+      'Hand warmers (cold weekends)',
+      'Ice towel / cooling rag for hot weather'
+    ]},
+    { cat: 'Family Setup', items: [
+      'Folding chairs (bring 2 — bleachers fill up)',
+      'Pop-up canopy or umbrella for shade',
+      'Wagon / cart for hauling gear',
+      'Phone charger / power bank',
+      'Bug spray',
+      'First-aid basics — Band-Aids, ibuprofen, blister pads'
+    ]},
+    { cat: 'Travel + Logistics', items: [
+      'Hotel confirmation + address',
+      'Field addresses + parking notes',
+      'Tournament schedule printed or screenshotted',
+      'Laundry basics for between hotel stays',
+      'Activities for siblings — books, tablets, headphones'
+    ]}
+  ]
+};
+
+const PREP_KEY = 'sliders_prep_v1';
+
+function loadPrepState() {
+  try {
+    return JSON.parse(localStorage.getItem(PREP_KEY) || '{}');
+  } catch { return {}; }
+}
+function savePrepState(state) {
+  try { localStorage.setItem(PREP_KEY, JSON.stringify(state)); } catch {}
+}
+
+let prepMode = 'game';
+
+function renderPrepCard() {
+  const body = document.getElementById('prepBody');
+  if (!body) return;
+  const state = loadPrepState();
+  const list = CHECKLISTS[prepMode] || [];
+  const stateKey = (cat, idx) => `${prepMode}::${cat}::${idx}`;
+
+  body.innerHTML = list.map(group => `
+    <div class="prep-group">
+      <div class="prep-group-title">${group.cat}</div>
+      <div class="prep-items">
+        ${group.items.map((item, idx) => {
+          const k = stateKey(group.cat, idx);
+          const checked = !!state[k];
+          return `
+            <label class="prep-item ${checked ? 'checked' : ''}" data-key="${k}">
+              <span class="prep-check">${checked ? '✓' : ''}</span>
+              <span class="prep-item-text">${item}</span>
+            </label>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  // Wire up
+  body.querySelectorAll('.prep-item').forEach(lbl => {
+    lbl.addEventListener('click', (e) => {
+      e.preventDefault();
+      const k = lbl.dataset.key;
+      const cur = loadPrepState();
+      cur[k] = !cur[k];
+      savePrepState(cur);
+      lbl.classList.toggle('checked', cur[k]);
+      lbl.querySelector('.prep-check').textContent = cur[k] ? '✓' : '';
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.prep-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.prep-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      prepMode = btn.dataset.mode;
+      renderPrepCard();
+    });
+  });
+  const resetBtn = document.getElementById('prepResetBtn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      const state = loadPrepState();
+      // Only clear keys for the active mode
+      const newState = {};
+      Object.keys(state).forEach(k => {
+        if (!k.startsWith(prepMode + '::')) newState[k] = state[k];
+      });
+      savePrepState(newState);
+      renderPrepCard();
+    });
+  }
+  renderPrepCard();
+});
+
+
+/* ============================================================
+   MY PLAYER FILTER
+
+   Lets a parent (or a coach previewing) focus the dashboard on
+   one player. The filter is stored per-device in localStorage
+   so each phone remembers its own kid. When active:
+   - body gets `.my-player-mode` + `data-my-player="<name>"`
+   - stat-table rows for other players get hidden via CSS
+   - team-wide cards (Practice Focus, charts, lineup banners) hide
+   - the picked player's row gets `.mp-show` so it stays visible
+   - a sticky banner offers a one-tap clear
+   ============================================================ */
+const MY_PLAYER_KEY = 'sliders_my_player_v1';
+let myPlayerSelection = null;
+
+function loadMyPlayer() {
+  try {
+    myPlayerSelection = localStorage.getItem(MY_PLAYER_KEY) || null;
+  } catch { myPlayerSelection = null; }
+  applyMyPlayerFilter();
+}
+
+function setMyPlayer(name) {
+  myPlayerSelection = name || null;
+  try {
+    if (name) localStorage.setItem(MY_PLAYER_KEY, name);
+    else localStorage.removeItem(MY_PLAYER_KEY);
+  } catch {}
+  applyMyPlayerFilter();
+}
+
+function applyMyPlayerFilter() {
+  const pillLabel = document.getElementById('mpLabel');
+  const pill = document.getElementById('myPlayerPill');
+  const banner = document.getElementById('mpBannerName');
+
+  // Clear existing mp-show marks
+  document.querySelectorAll('.mp-show').forEach(el => el.classList.remove('mp-show'));
+
+  if (myPlayerSelection) {
+    document.body.classList.add('my-player-mode');
+    document.body.setAttribute('data-my-player', myPlayerSelection);
+    if (pillLabel) pillLabel.textContent = myPlayerSelection.split(' ')[0]; // first name only on pill
+    if (pill) pill.classList.add('active');
+    if (banner) banner.textContent = myPlayerSelection;
+
+    // Mark all rows / chips matching this player
+    document.querySelectorAll(`[data-player="${CSS.escape(myPlayerSelection)}"]`).forEach(el => {
+      el.classList.add('mp-show');
+    });
+  } else {
+    document.body.classList.remove('my-player-mode');
+    document.body.removeAttribute('data-my-player');
+    if (pillLabel) pillLabel.textContent = 'All Team';
+    if (pill) pill.classList.remove('active');
+  }
+}
+
+function openMyPlayerPicker() {
+  const overlay = document.getElementById('my-player-overlay');
+  const body = document.getElementById('my-player-body');
+  if (!overlay || !body) return;
+
+  const players = (PLAYERS || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+
+  body.innerHTML = `
+    <div class="picker-row" data-name="">
+      <div class="picker-avatar" style="background:rgba(0,0,0,0.04);color:var(--ink-mute);font-size:14px;">×</div>
+      <div class="picker-row-text">
+        <div class="picker-row-name">All Team</div>
+        <div class="picker-row-sub">Show every player</div>
+      </div>
+    </div>
+    ${players.map(p => `
+      <div class="picker-row" data-name="${p.name}">
+        <div class="picker-avatar tier-${p.tier}">${p.short[0]}</div>
+        <div class="picker-row-text">
+          <div class="picker-row-name">${p.name}</div>
+          <div class="picker-row-sub">${p.field?.position || ''}${p.bat?.ops > 0 ? ` · ${formatStat(p.bat.ops)} OPS` : ''}</div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+
+  body.querySelectorAll('.picker-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const name = row.dataset.name || null;
+      setMyPlayer(name);
+      overlay.classList.remove('open');
+    });
+  });
+
+  overlay.classList.add('open');
+}
+
+function closeMyPlayerPicker() {
+  const overlay = document.getElementById('my-player-overlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const pill = document.getElementById('myPlayerPill');
+  if (pill) pill.addEventListener('click', openMyPlayerPicker);
+  const closeBtn = document.getElementById('my-player-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeMyPlayerPicker);
+  const overlay = document.getElementById('my-player-overlay');
+  if (overlay) overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeMyPlayerPicker();
+  });
+  const clearBtn = document.getElementById('mpBannerClear');
+  if (clearBtn) clearBtn.addEventListener('click', () => setMyPlayer(null));
+  loadMyPlayer();
+});
+
+
 function renderAll() {
   PLAYERS = buildPlayers();
 
@@ -6720,6 +7927,7 @@ function renderAll() {
   renderInsights(PLAYERS);
   renderMatchups();
   renderPracticeFocus(PLAYERS);
+  renderPlayingTime(PLAYERS);
 
   renderTeamTrend(PLAYERS);
   renderOpsBarChart(PLAYERS);
@@ -6727,6 +7935,10 @@ function renderAll() {
   renderWalksChart(PLAYERS);
 
   updateDataStatus();
+
+  // Re-apply My Player filter — DOM was just rebuilt, so the marks need to
+  // be re-stamped onto the fresh elements.
+  applyMyPlayerFilter();
 }
 
 function updateDataStatus() {
