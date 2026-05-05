@@ -969,6 +969,19 @@ body.viewer-mode .viewer-banner { display: flex; }
   .player-row { padding: 12px 0; min-height: 48px; }
   .player-avatar { width: 32px; height: 32px; }
 
+  /* Stat tables: make the frozen player-name column narrower on phone so it
+     doesn't eat half the screen during horizontal scroll. */
+  table th, table td { padding: 10px 8px; }
+  table thead th:first-child,
+  table tbody td:first-child {
+    max-width: 140px;
+    padding-left: 10px;
+    padding-right: 8px;
+  }
+  td.player { font-size: 12.5px; }
+  td.player .player-cell { gap: 7px; overflow: hidden; }
+  td.player .player-avatar { width: 24px; height: 24px; font-size: 11px; }
+
   .insight-card { padding: 14px 16px; }
   .insight-card h3 { font-size: 16px; }
   .insight-card p { font-size: 12px; }
