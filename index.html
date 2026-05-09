@@ -3228,6 +3228,62 @@ table tbody tr:hover td:first-child {
 }
 .coach-note strong { color: var(--orange-deep); }
 
+/* ========== COACH TAGS (drawer) ========== */
+body.viewer-mode .coach-only { display: none; }
+.tag-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.tag-row-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  flex-shrink: 0;
+  min-width: 60px;
+}
+.tag-toggle-group {
+  display: inline-flex;
+  background: rgba(0,0,0,0.05);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+  flex: 1;
+}
+.tag-toggle-btn {
+  flex: 1;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--ink-mute);
+  cursor: pointer;
+  border-radius: 999px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.tag-toggle-btn.active {
+  background: var(--orange-grad);
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.2) inset, 0 2px 6px -2px rgba(255,107,26,0.35);
+}
+.tag-toggle-btn:hover:not(.active) { color: var(--ink); }
+.tag-hint {
+  font-size: 11.5px;
+  color: var(--ink-mute);
+  font-style: italic;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
 /* ========== SECTION HEADINGS ========== */
 .section-head {
   display: flex;
@@ -3777,6 +3833,18 @@ table tbody tr:hover td:first-child {
   <div class="drawer-section" id="drawer-improvement">
     <h3 id="drawer-improvement-title">Improvement Plan</h3>
     <div id="drawer-improvement-body"></div>
+  </div>
+  <div class="drawer-section coach-only" id="drawer-tags-section">
+    <h3>🏷️ Coach Tags</h3>
+    <div class="tag-row">
+      <div class="tag-row-label">Speed</div>
+      <div class="tag-toggle-group" id="drawer-speed-toggle">
+        <button class="tag-toggle-btn" data-speed="slow">🐢 Slow</button>
+        <button class="tag-toggle-btn" data-speed="normal">— Normal</button>
+        <button class="tag-toggle-btn" data-speed="fast">⚡ Fast</button>
+      </div>
+    </div>
+    <div class="tag-hint">Lineup builder respects this — slow players are kept out of the leadoff spot regardless of OBP.</div>
   </div>
   <div class="drawer-section">
     <h3>Coach's Note</h3>
@@ -4600,6 +4668,7 @@ function packSyncState() {
     csvData: CSV_DATA,
     manualLineups: manualLineups,
     opponentStrengths: opponentStrengths,
+    playerTags: playerTags,
     lastUpdated: LAST_UPDATED || new Date().toISOString(),
     publishedAt: new Date().toISOString()
   };
@@ -4618,6 +4687,10 @@ function applySyncState(data) {
   if (data.opponentStrengths) {
     opponentStrengths = data.opponentStrengths;
     try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify({ strengths: opponentStrengths })); } catch (e) {}
+  }
+  if (data.playerTags) {
+    playerTags = data.playerTags;
+    try { localStorage.setItem(PLAYER_TAGS_KEY, JSON.stringify(playerTags)); } catch (e) {}
   }
   PLAYERS = buildPlayers();
   return true;
@@ -5588,14 +5661,33 @@ function generateLineup(scenario, players) {
   const active = players.filter(p => p.bat && p.bat.ops > 0);
   if (active.length < 4) return { order: active, notes: {} };
 
+  // Speed-aware leadoff selection. A great leadoff hitter has high OBP AND
+  // can run — they need to score from second on a single, take the extra
+  // base, and apply pressure. A high-OBP player flagged "slow" doesn't fit
+  // that role even if their .700 OBP would otherwise dominate the sort.
+  // Coach intel via player tags overrides what stats alone would dictate.
+  function isSlow(p)   { return getPlayerSpeed(p.name) === 'slow'; }
+  function isFast(p)   { return getPlayerSpeed(p.name) === 'fast'; }
+
+  // Pick leadoff: highest OBP among non-slow players, with fast as tiebreaker.
+  function pickLeadoff(pool) {
+    const eligible = pool.filter(p => !isSlow(p));
+    const candidatePool = eligible.length > 0 ? eligible : pool; // fall back if everyone's flagged slow
+    const sorted = sortBy(candidatePool, p => p.bat.obp);
+    // If the top OBP is within .020 of the second and #2 is fast, prefer #2.
+    if (sorted.length >= 2 && (sorted[0].bat.obp - sorted[1].bat.obp) <= 0.020 && isFast(sorted[1]) && !isFast(sorted[0])) {
+      return sorted[1];
+    }
+    return sorted[0];
+  }
+
   const byOps = sortBy(active, p => p.bat.ops);
   const top5Pool = byOps.slice(0, Math.min(5, active.length));
   let lineup = [];
   const notes = {};
 
   if (scenario === 'standard') {
-    const byObp = sortBy(top5Pool, p => p.bat.obp);
-    const leadoff = byObp[0];
+    const leadoff = pickLeadoff(top5Pool);
     const remainAfterLead = top5Pool.filter(p => p !== leadoff);
     const hottest = sortBy(remainAfterLead, p => (p.bat.opsL4 - p.bat.ops))[0];
     const remainAfterHot = remainAfterLead.filter(p => p !== hottest);
@@ -5606,7 +5698,11 @@ function generateLineup(scenario, players) {
 
     lineup = [leadoff, hottest, second, best, third].filter(Boolean);
 
-    if (leadoff) notes[leadoff.name] = 'Top OBP — sets the table, forces strikes.';
+    if (leadoff) {
+      notes[leadoff.name] = isFast(leadoff)
+        ? 'Top OBP + speed — sets the table, forces strikes, takes the extra base.'
+        : 'Top OBP — sets the table, forces strikes.';
+    }
     if (hottest) notes[hottest.name] = `Hot bat (+${formatStat(hottest.bat.opsL4 - hottest.bat.ops)} L4 OPS). Keeps line moving.`;
     if (second) notes[second.name] = 'Power protection — slugs behind hot bat.';
     if (best) notes[best.name] = 'Best hitter — bats with traffic on base.';
@@ -5615,8 +5711,7 @@ function generateLineup(scenario, players) {
   else if (scenario === 'weak') {
     const studs = byOps.slice(0, 4);
     const next = byOps.slice(4, Math.min(9, byOps.length));
-    const byObp = sortBy(studs, p => p.bat.obp);
-    const leadoff = byObp[0];
+    const leadoff = pickLeadoff(studs);
     const remStuds = studs.filter(p => p !== leadoff);
     const remOps = sortBy(remStuds, p => p.bat.ops);
     lineup = [leadoff, ...remOps];
@@ -5630,8 +5725,7 @@ function generateLineup(scenario, players) {
     });
   }
   else if (scenario === 'elite') {
-    const byObp = sortBy(active, p => p.bat.obp);
-    const leadoff = byObp[0];
+    const leadoff = pickLeadoff(active);
     const remAfterLead = active.filter(p => p !== leadoff);
     const lowKContact = sortBy(remAfterLead, p => -p.bat.k)[0];
     const remAfterTwo = remAfterLead.filter(p => p !== lowKContact);
@@ -6050,7 +6144,9 @@ const SCHEDULE = [
 ];
 
 const SCHEDULE_KEY = 'sliders_schedule_v1';
+const PLAYER_TAGS_KEY = 'sliders_player_tags_v1';
 let opponentStrengths = {};   // { gameId: 'weak' | 'standard' | 'elite' }
+let playerTags = {};          // { playerName: { speed: 'slow'|'normal'|'fast' } }
 let expandedGames = new Set();
 
 function loadScheduleState() {
@@ -6061,11 +6157,39 @@ function loadScheduleState() {
       opponentStrengths = obj.strengths || {};
     }
   } catch (e) {}
+  try {
+    const raw = localStorage.getItem(PLAYER_TAGS_KEY);
+    if (raw) playerTags = JSON.parse(raw) || {};
+  } catch (e) {}
+  // Seed defaults: coach intel that data alone can't capture.
+  // Henriquez has high OBP but is slow — exclude from leadoff.
+  if (!playerTags['Jayden Henriquez']) {
+    playerTags['Jayden Henriquez'] = { speed: 'slow' };
+    try { localStorage.setItem(PLAYER_TAGS_KEY, JSON.stringify(playerTags)); } catch (e) {}
+  }
 }
 function saveScheduleState() {
   try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify({ strengths: opponentStrengths })); } catch (e) {}
   markPending();
   schedulePush();
+}
+function savePlayerTags() {
+  try { localStorage.setItem(PLAYER_TAGS_KEY, JSON.stringify(playerTags)); } catch (e) {}
+  markPending();
+  schedulePush();
+}
+function getPlayerSpeed(name) {
+  return playerTags[name]?.speed || 'normal';
+}
+function setPlayerSpeed(name, speed) {
+  if (!playerTags[name]) playerTags[name] = {};
+  if (speed === 'normal') {
+    delete playerTags[name].speed;
+    if (Object.keys(playerTags[name]).length === 0) delete playerTags[name];
+  } else {
+    playerTags[name].speed = speed;
+  }
+  savePlayerTags();
 }
 function getOpponentStrength(gameId) { return opponentStrengths[gameId] || 'standard'; }
 function setOpponentStrength(gameId, strength) {
@@ -7531,6 +7655,24 @@ function openDrawer(playerName) {
         : "Coach's Note · Hitting";
     }
   }
+
+  // ========== Coach Tags (speed) ==========
+  const speedNow = getPlayerSpeed(p.name);
+  document.querySelectorAll('#drawer-speed-toggle .tag-toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.speed === speedNow);
+    // Replace listener on each open so we always reference the current player
+    const fresh = btn.cloneNode(true);
+    btn.parentNode.replaceChild(fresh, btn);
+    fresh.classList.toggle('active', fresh.dataset.speed === getPlayerSpeed(p.name));
+    fresh.addEventListener('click', () => {
+      setPlayerSpeed(p.name, fresh.dataset.speed);
+      // Update the toggle visual state
+      document.querySelectorAll('#drawer-speed-toggle .tag-toggle-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.speed === fresh.dataset.speed));
+      // Re-render lineups so the new tag takes effect immediately
+      if (typeof renderAll === 'function') renderAll();
+    });
+  });
 
   // ========== Improvement Plan ==========
   // Use the active "view" so we only show drills relevant to the tab the
