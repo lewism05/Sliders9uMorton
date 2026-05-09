@@ -772,6 +772,52 @@ body.viewer-mode .viewer-banner { display: flex; }
 .upload-message.error { color: var(--red); }
 .upload-message.success { color: var(--green); }
 
+/* ========== UPLOAD PROGRESS BAR ========== */
+.upload-progress {
+  display: none;
+  width: 100%;
+  margin-top: 8px;
+}
+.upload-progress.active { display: block; }
+.upload-progress-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.upload-progress-current {
+  font-style: italic;
+  color: var(--ink-mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+}
+.upload-progress-pct {
+  font-weight: 800;
+  color: var(--orange-deep);
+  flex-shrink: 0;
+}
+.upload-progress-track {
+  height: 8px;
+  background: rgba(0,0,0,0.06);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.upload-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--orange-grad);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+  box-shadow: 0 0 8px rgba(255,107,26,0.35);
+}
+
 /* ========== STAT BAR ========== */
 .statbar {
   display: grid;
@@ -3382,6 +3428,15 @@ body.viewer-mode .coach-only { display: none; }
         </div>
       </div>
       <div class="files-list" id="filesList"></div>
+      <div class="upload-progress" id="uploadProgress">
+        <div class="upload-progress-text">
+          <span class="upload-progress-current" id="uploadProgressCurrent">Starting…</span>
+          <span class="upload-progress-pct" id="uploadProgressPct">0%</span>
+        </div>
+        <div class="upload-progress-track">
+          <div class="upload-progress-fill" id="uploadProgressFill"></div>
+        </div>
+      </div>
       <div class="data-bar-buttons">
         <div class="upload-message" id="uploadMessage"></div>
         <div style="display: flex; gap: 8px;">
@@ -8917,23 +8972,53 @@ function renderPendingFiles() {
 
 processBtn.addEventListener('click', async () => {
   uploadMessage.className = 'upload-message';
-  uploadMessage.textContent = 'Processing files...';
+  uploadMessage.textContent = '';
   processBtn.disabled = true;
+
+  const progressEl = document.getElementById('uploadProgress');
+  const progressFill = document.getElementById('uploadProgressFill');
+  const progressPct = document.getElementById('uploadProgressPct');
+  const progressCurrent = document.getElementById('uploadProgressCurrent');
+  progressEl.classList.add('active');
+
+  // Total work units = 1 per file + 2 for the final renderAll/save step.
+  // Gives the user a smooth bar even when the final render takes a beat.
+  const totalSteps = PENDING_UPLOADS.length + 2;
+  let completed = 0;
+  function bumpProgress(label) {
+    completed++;
+    const pct = Math.min(100, Math.round((completed / totalSteps) * 100));
+    progressFill.style.width = pct + '%';
+    progressPct.textContent = pct + '%';
+    if (label) progressCurrent.textContent = label;
+  }
+  function setLabel(label) { progressCurrent.textContent = label; }
+
+  // Yield to the browser so the bar actually paints between files.
+  // Without this, JS blocks the event loop and the user sees a frozen UI.
+  const yieldToUI = () => new Promise(r => setTimeout(r, 0));
 
   let successCount = 0;
   let errorMessages = [];
 
-  for (const entry of PENDING_UPLOADS) {
+  for (let i = 0; i < PENDING_UPLOADS.length; i++) {
+    const entry = PENDING_UPLOADS[i];
+    setLabel(`Reading ${entry.file.name}`);
+    await yieldToUI();
     try {
       const text = await entry.file.text();
+      setLabel(`Parsing ${entry.file.name}`);
+      await yieldToUI();
       const parsed = csvToObjects(text);
       if (parsed.data.length === 0) {
         errorMessages.push(`${entry.file.name}: no data rows found`);
+        bumpProgress();
         continue;
       }
       const playerName = getPlayerName(parsed.data[0], parsed.headers);
       if (!playerName) {
         errorMessages.push(`${entry.file.name}: couldn't find player names`);
+        bumpProgress();
         continue;
       }
 
@@ -8945,6 +9030,7 @@ processBtn.addEventListener('click', async () => {
         categories = detectCategoriesInData(parsed.headers);
         if (categories.length === 0) {
           errorMessages.push(`${entry.file.name}: no recognized stat columns`);
+          bumpProgress();
           continue;
         }
       } else {
@@ -8955,20 +9041,39 @@ processBtn.addEventListener('click', async () => {
         CSV_DATA[cat][entry.meta.window] = parsed;
       });
       successCount++;
+      bumpProgress();
     } catch (err) {
       errorMessages.push(`${entry.file.name}: ${err.message}`);
+      bumpProgress();
     }
   }
 
+  setLabel('Saving…');
+  await yieldToUI();
   LAST_UPDATED = Date.now();
   saveToStorage();
+  bumpProgress();
+
+  setLabel('Updating dashboard…');
+  await yieldToUI();
   PENDING_UPLOADS = [];
   filesList.innerHTML = '';
 
   if (successCount > 0) {
-    uploadMessage.className = 'upload-message success';
-    uploadMessage.textContent = `Loaded ${successCount} file${successCount>1?'s':''}. Dashboard updating...`;
     renderAll();
+  }
+  bumpProgress();
+
+  // Hold the 100% bar briefly for visual confirmation, then collapse the UI.
+  await new Promise(r => setTimeout(r, 350));
+  progressEl.classList.remove('active');
+  progressFill.style.width = '0%';
+  progressPct.textContent = '0%';
+  progressCurrent.textContent = 'Starting…';
+
+  if (successCount > 0) {
+    uploadMessage.className = 'upload-message success';
+    uploadMessage.textContent = `Loaded ${successCount} file${successCount>1?'s':''}.`;
     setTimeout(() => {
       uploadMessage.textContent = '';
       dataBarPanel.classList.add('hidden');
